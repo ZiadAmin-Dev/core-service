@@ -2,18 +2,21 @@
   "name": "core-service",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ZiadAmin-Dev/core-service.git"
   },
   "keywords": [],
-  "author": "",
+  "author": "Ziad Amin",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "bugs": {
     "url": "https://github.com/ZiadAmin-Dev/core-service/issues"
   },
@@ -28,7 +31,7 @@
     "@types/node": "^26.1.2",
     "eslint": "^10.8.0",
     "prettier": "^3.9.6",
-    "ts-node-dev": "^2.0.0",
+    "tsx": "^4.23.1",
     "typescript": "^7.0.2"
   }
 }
