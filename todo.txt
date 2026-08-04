@@ -1,0 +1,197 @@
+outcame:
+1- auth system (signup, login, reset password)
+2- user (/me , /update)
+3- customer addresses
+
+-----------------------------------
+1. create database table for (users) and (customer_addresses) and (password_resets)
+2. implement auth system
+3. implement user module
+4. implement customer_addresses
+5. test and wire everything
+
+===================================================
+ايه الي عملناه فعلا حتي الان:
+ضفنا الاتي
+ACCESS_EXPIRES_IN=1h
+REFRESH_EXPIRES_IN=7d
+DB_MIGRATION_DIRECTORY=src/migrations
+DB_MIGRATION_EXTENSION=ts
+وكل ده في ملف .env
+
+======================================================
+عدلنا علي الـ knex.ts
+
+const config: Knex.Config = {
+    ......
+
+    migrations: {
+        directory: env.db.migrationDirectory,
+        extension: env.db.migrationExtension,
+    }
+}
+
+
+=====================================================
+وملف env.ts
+
+import { config } from "dotenv";
+import {z} from "zod";
+
+config();
+
+const schema = z.object({
+    ......
+    DB_MIGRATION_DIRECTORY: z.string(),
+    DB_MIGRATION_EXTENSION: z.string(),
+});
+
+const parsed = schema.parse(process.env);
+
+export const env = {
+    PORT: Number(parsed.PORT),
+    db:{
+        .....
+        migrationDirectory: parsed.DB_MIGRATION_DIRECTORY,
+        migrationExtension: parsed.DB_MIGRATION_EXTENSION,
+    }
+}
+==========================================================
+قررنا ننقل الـ  const config: Knex.Config = { من knex.ts الى ملف اخر جوا نفس فولدر knex وهيكون اسمه knex.file.ts مثلا
+
+knex.file.ts
+import {env} from '../config/env.js';
+import {Knex} from "knex";
+
+const config: Knex.Config = {
+    client: "pg",
+    connection: {
+        host: env.db.host,
+        port: env.db.port,
+        user: env.db.username,
+        password: env.db.password,
+        database: env.db.name,
+    },
+
+    pool: { min: 0, max: env.db.poolMax },
+
+    migrations: {
+        directory: env.db.migrationDirectory,
+        extension: env.db.migrationExtension,
+    }
+}
+
+export default config;
+
+==================================================
+
+عملنا reslove for the path of config in env.ts
+1- import path from "path";
+2- config({path: path.resolve(import.meta.dirname, "../../../.env")});
+3- also resolve in export const env = { migrationDirectory: path.resolve(import.meta.dirname,"../../../",parsed.DB_MIGRATION_DIRECTORY)
+
+========================================================
+نفذنا امر npx knex migrate:make create_users_table --knex.file src/common/knex/knex.file.ts
+
+======================================================
+
+اتعمل ملف ال migrations والي فيه ال up وال down وهنشرح ايه هما دول واهم سيناريو انك لو عوزت ترجع في الكود بتاعك مثلا عن طريق git commands ساعتها انت الكود بتاعك هيرجع عادي ولكن في الداتا بيز انت لسا معملتش revert للي انت ضفته 
+
+
+======================================================
+بدأنا نعمل جدول اليوزرز وجدول ال addresses وجدول ال password_resets
+
+
+
+===========================================================
+عملنا شوية commons حلوين 
+والي هما:
+1- logger.ts في فولدر logger
+2- we made folder type and me created express.d.ts:
+    {
+        declare namespace Express {
+    interface Request {
+        correlationId?: string;
+        user?: {
+            userId: number;
+            role: string;
+            email: string;
+        }
+    }
+        }
+    }
+
+3- error folder contains AppError.ts and ErrorHandler.ts
+4- correlationId.ts inside correlation folder
+
+=================================================================
+
+عملنا auth and user folders
+
+جوا الـ auth و ال user عملنا فولدر entity 
+وجواهم ال entity بتاعتهم
+src/app/auth/entity/password-reset.entity.ts
+src/app/user/entity/user.entity.ts
+
+فولدر ال entity بتاع user عملنا ملف enums عشان ال system role
+
+====================================================================
+
+
+عملنا core-service\src\app\user\repository\users.repo.ts
+
+==============================================================
+
+عملنا الـ src/app/auth/service/auth.service.ts
+وعملنا src/app/auth/dto/auth.dto.ts
+لازم تشرح ايه هو الـ dto
+
+we downloaded (npm i class-transformer class-validator)
+
+============================================================
+
+فعلنا في tsconfig
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+
+وخلصنا ملف ال dto
+
+==============================================
+
+رجعنا علي الـ user.repo.ts
+وعملنا 
+export async function findUserByEmailOrPhone(email: string, phone: string): Promise<Boolean> {
+    const result = await db.raw(`
+        SELECT EXISTS(
+        SELECT 1 FROM users WHERE email = ? OR phone = ?
+        ) AS "exists"`, [email, phone]);
+    return result.rows[0].exists;
+}
+
+===============================================
+
+رجعنا للـ auth.service
+import { findUserExistsByEmailOrPhone } from "../../user/repository/users.repo";
+import {registerDTO} from "../dto/auth.dto";
+import { UserAlreadyExistsError } from "../errors";
+
+export class authService {
+    register: (data: registerDTO) => Promise<void> = async(data: registerDTO) :Promise<void> => {
+        const existing: Boolean = await findUserExistsByEmailOrPhone(data.email, data.phone);
+
+        if(existing){
+            throw UserAlreadyExistsError;
+        }
+
+        
+    }
+}
+
+===========================================================
+
+حملنا npm i bcrypt @types/bcrypt jsonwebtoken @types/jsonwebtoken
+
+وعملنا utils.ts جوا auth folder
+
+============================================================
+

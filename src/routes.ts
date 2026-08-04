@@ -1,11 +1,11 @@
 import { Router } from "express";
-import { healthRouter } from "./app/health/health.routes.js";
+import { healthRouter } from "./app/health/health.routes";
+import { authRouter } from "./app/auth/auth.routes";
 export const routes = Router();
 
+//health routes
 routes.use("/health", healthRouter);
 
-
-//user routes
 //auth routes
-//menu routes
-//....
+routes.use("/auth", authRouter);
+
