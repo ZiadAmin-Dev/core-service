@@ -1,5 +1,5 @@
-import { appError } from "../../common/error/appError";
+import { AppError } from "../../common/error/appError";
 
 
-export const UserAlreadyExistsError = new appError("User already exists", 400); //bad request
-export const CannotSingUpAsSystemAdminError = new appError("Cannot register as system admin", 403); //forbidden
+export const userAlreadyExistsError = new AppError("User already exists", 400); //bad request
+export const cannotSingUpAsSystemAdminError = new AppError("Cannot register as system admin", 403); //forbidden

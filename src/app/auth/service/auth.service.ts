@@ -1,19 +1,20 @@
-import { systemRole } from "../../user/entity/enums";
+import { SystemRole } from "../../user/entity/enums";
 import { createUser, findUserExistsByEmailOrPhone } from "../../user/repository/users.repo";
-import {registerDTO} from "../dto/auth.dto";
-import { CannotSingUpAsSystemAdminError, UserAlreadyExistsError } from "../errors";
+import { RegisterDTO } from "../dto/auth.dto";
+import { cannotSingUpAsSystemAdminError, userAlreadyExistsError } from "../errors";
 import { createAccessToken, createRefreshToken, hashPassword } from "../utils";
 
-export class authService {
-    register = async(data: registerDTO )=> {
+export class AuthService {
+    register = async(data: RegisterDTO )=> {
         
-        if(data.role == systemRole.SYSTEM_ADMIN){
-            throw CannotSingUpAsSystemAdminError;
+        if(data.role == SystemRole.SYSTEM_ADMIN){
+            throw cannotSingUpAsSystemAdminError;
         }
+
         const existing: Boolean = await findUserExistsByEmailOrPhone(data.email, data.phone);
 
         if(existing){
-            throw UserAlreadyExistsError;
+            throw userAlreadyExistsError;
         }
 
         const hashedPassword = await hashPassword(data.password);
@@ -47,4 +48,4 @@ export class authService {
     }
 }
 
-export const AuthService = new authService();
+export const authService = new AuthService();

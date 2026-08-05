@@ -1,10 +1,11 @@
-import { IsEmail, IsEnum, IsString, IsStrongPassword, MaxLength, MinLength } from "class-validator";
-import { systemRole } from "../../user/entity/enums";
+import { IsEmail, IsEnum, IsString, IsStrongPassword, MaxLength, MinLength, IsPhoneNumber } from "class-validator";
+import { SystemRole } from "../../user/entity/enums";
 
-export class registerDTO {
+export class RegisterDTO {
     @IsEmail()
     email!: string;
 
+    @IsString()
     @MinLength(10)
     @MaxLength(11)
     phone!: string;
@@ -21,10 +22,10 @@ export class registerDTO {
         minNumbers: 1,
         minSymbols: 0
     }, {
-        message: 'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number.'
+        message: 'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter and one number.'
     })
     password!: string;
 
-    @IsEnum(systemRole)
-    role!: systemRole;
+    @IsEnum(SystemRole)
+    role!: SystemRole;
 }

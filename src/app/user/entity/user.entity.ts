@@ -1,17 +1,17 @@
-import { systemRole } from "./enums";
+import { SystemRole } from "./enums";
 
-export class user {
+export class User {
     id: number;
     email: string;
     phone: string;
     name: string;
     passwordHash: string;
-    systemRole: systemRole;
+    systemRole: SystemRole;
     deletedAt: Date | null;
     createdAt: Date;
     updatedAt: Date;
 
-    constructor(data: Partial<user>) {
+    constructor(data: Partial<User>) {
         this.id = data.id!;
         this.email = data.email!;
         this.phone = data.phone!;

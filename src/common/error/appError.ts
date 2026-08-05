@@ -1,4 +1,4 @@
-export class appError extends Error {
+export class AppError extends Error {
     statusCode: number;
     isOperational: boolean;
 

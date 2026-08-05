@@ -1,5 +1,5 @@
 import { db } from "../../../common/knex/knex";
-import { user } from "../entity/user.entity";
+import { User } from "../entity/user.entity";
 
 const USER_COLUMNS = [ 
     "id", 
@@ -14,7 +14,7 @@ const USER_COLUMNS = [
 ]
 
 function toEntity(row: any){
-    return new user({
+    return new User({
         id: row.id,
         email: row.email,
         phone: row.phone,
@@ -27,7 +27,7 @@ function toEntity(row: any){
     })
 }
 
-export async function findUserByEmail(email: string): Promise<user | undefined> {
+export async function findUserByEmail(email: string): Promise<User | undefined> {
     const row = await db("users").select(
         USER_COLUMNS
     ).where("email", email).whereNull("deleted_at").first();
@@ -36,7 +36,7 @@ export async function findUserByEmail(email: string): Promise<user | undefined> 
     return row? toEntity(row) : undefined;
 }
 
-export async function findUserByPhone(phone: string): Promise<user | undefined> {
+export async function findUserByPhone(phone: string): Promise<User | undefined> {
     const row = await db("users").select(
         USER_COLUMNS
     ).where("phone", phone).whereNull("deleted_at").first();
@@ -53,7 +53,7 @@ export async function findUserExistsByEmailOrPhone(email: string, phone: string)
     return result.rows[0].exists;
 }
 
-export async function createUser(user: Partial<user>): Promise<user> {
+export async function createUser(user: Partial<User>): Promise<User> {
     const [row] = await db("users").insert({
         email: user.email,
         phone: user.phone,

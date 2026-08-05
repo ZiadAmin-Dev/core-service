@@ -10,7 +10,7 @@ export async function up(knex: Knex): Promise<void> {
             otp_hash TEXT NOT NULL,
             expires_at TIMESTAMP NOT NULL,
             created_at TIMESTAMP NOT NULL,
-            consumed_at TIMESTAMP NOT NULL,
+            consumed_at TIMESTAMP,
 
             CONSTRAINT fk_password_resets_user_id FOREIGN KEY (user_id) REFERENCES users(id)
         );

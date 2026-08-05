@@ -1,8 +1,8 @@
 import type {Request, Response, NextFunction} from "express";
 import {logger} from "../logger/logger";
-import type {appError} from "./AppError";
+import type {AppError} from "./AppError";
 
-export function errorHandler(err: appError, req: Request, res: Response, _next: NextFunction) {
+export function errorHandler(err: AppError, req: Request, res: Response, _next: NextFunction) {
     const operational = err.isOperational;
 
     logger.error(err.message, {

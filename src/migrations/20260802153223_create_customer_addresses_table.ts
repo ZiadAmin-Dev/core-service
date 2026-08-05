@@ -7,7 +7,7 @@ export async function up(knex: Knex): Promise<void> {
         CREATE TABLE customer_addresses(
             id SERIAL PRIMARY KEY,
             user_id BIGINT NOT NULL,
-            lable TEXT NOT NULL,
+            label TEXT NOT NULL,
             country TEXT NOT NULL,
             city TEXT NOT NULL,
             street TEXT NOT NULL,
