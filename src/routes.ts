@@ -8,3 +8,6 @@ routes.use("/health", healthRouter);
 
 //auth routes
 routes.use("/auth", authRouter);
+
+//user routes
+//routes.use("/user", userRouter);
