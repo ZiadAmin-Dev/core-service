@@ -1,3 +1,4 @@
+import { promise } from "zod";
 import { db } from "../../../common/knex/knex";
 import { User } from "../entity/user.entity";
 
@@ -27,12 +28,19 @@ function toEntity(row: any){
     })
 }
 
+export async function findUserById(id: number): Promise<User | undefined> {
+    const row = await db("users").select(
+        USER_COLUMNS
+    ).where("id", id).whereNull("deleted_at").first();
+    
+    return row? toEntity(row) : undefined;
+}
+
 export async function findUserByEmail(email: string): Promise<User | undefined> {
     const row = await db("users").select(
         USER_COLUMNS
     ).where("email", email).whereNull("deleted_at").first();
 
-    console.log("findUserByEmail row:", row);
     return row? toEntity(row) : undefined;
 }
 
@@ -53,6 +61,15 @@ export async function findUserExistsByEmailOrPhone(email: string, phone: string)
     return result.rows[0].exists;
 }
 
+export async function findUserExistsByEmail(email: string): Promise<Boolean> {
+    const result = await db.raw(`
+        SELECT EXISTS(
+        SELECT 1 FROM users WHERE email = ?
+        ) AS "exists"`, [email]);
+    return result.rows[0].exists;
+}
+
+
 export async function createUser(user: Partial<User>): Promise<User> {
     const [row] = await db("users").insert({
         email: user.email,
@@ -65,4 +82,8 @@ export async function createUser(user: Partial<User>): Promise<User> {
     }).returning(USER_COLUMNS);
 
     return toEntity(row);
+}
+
+export async function updateUserPassword(id: number, password: string) :Promise<void> {
+    await db("users").where("id", id).update({password_hash: password});
 }

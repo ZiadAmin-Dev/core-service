@@ -18,6 +18,9 @@ const schema = z.object({
     REFRESH_EXPIRES_IN: z.string().default("7d"),
     DB_MIGRATION_DIRECTORY: z.string(),
     DB_MIGRATION_EXTENSION: z.string(),
+
+    
+    NODE_ENV: z.string().default("development")
 });
 
 const parsed = schema.parse(process.env);
