@@ -1,6 +1,9 @@
-import {findUserById} from "../../user/repository/users.repo";
-import {userNotFoundError } from "../user.errors"
+import { findUserById, findUserExistsByPhone } from "../../user/repository/users.repo";
+import { userNotFoundError, phoneAlreadyInUse } from "../user.errors"
 import { SystemRole } from "../entity/enums";
+import { UpdateProfileDTO } from "../dto/user.dto"
+import { updateUserProfile } from "../repository/users.repo"
+import { toUserResponse } from "../../../common/utils/utils";
 
 export class UserService{
     
@@ -14,6 +17,24 @@ export class UserService{
             phone: user.phone,
             systemRole: user.systemRole,
         }
+    }
+
+    updateUserProfile = async (data: UpdateProfileDTO, userId: number) =>{
+        const user = await findUserById(userId);
+        if(!user) throw userNotFoundError;
+        if (data.phone) {
+            const newPhoneExisting = await findUserExistsByPhone(data.phone);
+            if (newPhoneExisting) throw phoneAlreadyInUse; }
+        await updateUserProfile(userId, {
+        name: data.name,
+        phone: data.phone
+    })
+    const updatedUser = await findUserById(userId);
+    if (!updatedUser) throw userNotFoundError;
+    return {
+        message: "Profile updated",
+        user: toUserResponse(updatedUser)
+    };
     }
 }
 

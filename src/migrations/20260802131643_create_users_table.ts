@@ -24,8 +24,6 @@ export async function up(knex: Knex): Promise<void> {
         CREATE INDEX idx_users_email ON users(email);
         CREATE INDEX idx_users_system_role ON users(system_role);
         `
-        
-    
     )
 
 }
@@ -36,8 +34,6 @@ export async function down(knex: Knex): Promise<void> {
         `
         DROP TABLE users;
         `
-    
-    
     )
 }
 

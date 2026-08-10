@@ -6,3 +6,4 @@ export const userRouter: Router = Router();
 
 //protect
 userRouter.get("/me", authnetcation ,userController.getMe)
+userRouter.patch("/me", authnetcation, userController.updateProfile)

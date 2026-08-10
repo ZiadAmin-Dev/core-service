@@ -1,6 +1,6 @@
-import { promise } from "zod";
 import { db } from "../../../common/knex/knex";
 import { User } from "../entity/user.entity";
+import { UpdateUserProfileData } from "../user.utils"
 
 const USER_COLUMNS = [ 
     "id", 
@@ -28,6 +28,9 @@ function toEntity(row: any){
     })
 }
 
+//========================================================================================
+//                                  FIND USER METHODS
+//========================================================================================
 export async function findUserById(id: number): Promise<User | undefined> {
     const row = await db("users").select(
         USER_COLUMNS
@@ -53,6 +56,18 @@ export async function findUserByPhone(phone: string): Promise<User | undefined> 
     return row? toEntity(row) : undefined;
 }
 
+
+//========================================================================================
+//                              FIND EXISTING METHODS
+//========================================================================================
+export async function findUserExistsById(id: number): Promise<Boolean> {
+    const result = await db.raw(`
+        SELECT EXISTS(
+        SELECT 1 FROM users WHERE id = ?
+        ) AS "exists"`, [id]);
+    return result.rows[0].exists;
+}
+
 export async function findUserExistsByEmailOrPhone(email: string, phone: string): Promise<Boolean> {
     const result = await db.raw(`
         SELECT EXISTS(
@@ -69,7 +84,17 @@ export async function findUserExistsByEmail(email: string): Promise<Boolean> {
     return result.rows[0].exists;
 }
 
+export async function findUserExistsByPhone(phone: string): Promise<Boolean> {
+    const result = await db.raw(`
+        SELECT EXISTS(
+        SELECT 1 FROM users WHERE phone = ?
+        ) AS "exists"`, [phone]);
+    return result.rows[0].exists;
+}
 
+//========================================================================================
+//                                  CREATE METHODS
+//========================================================================================
 export async function createUser(user: Partial<User>): Promise<User> {
     const [row] = await db("users").insert({
         email: user.email,
@@ -84,6 +109,15 @@ export async function createUser(user: Partial<User>): Promise<User> {
     return toEntity(row);
 }
 
+
+
+//========================================================================================
+//                                  UPDATE METHODS
+//========================================================================================
 export async function updateUserPassword(id: number, password: string) :Promise<void> {
     await db("users").where("id", id).update({password_hash: password});
+}
+
+export async function updateUserProfile(id: number, data: UpdateUserProfileData) {
+    await db("users").where("id", id).update(data);
 }

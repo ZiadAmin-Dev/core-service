@@ -39,7 +39,7 @@ export async function findLatestPasswordResetByUserId(userId: number): Promise<P
     return toEntity(row);
 }
 
-export async function consumePasswordReset(passwordResetId: number): Promise<void> {
+export async function updatePasswordResetConsumedAt(passwordResetId: number): Promise<void> {
     await db("password_resets").where("id", passwordResetId).update({
         consumed_at: new Date()
     })
