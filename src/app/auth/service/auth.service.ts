@@ -4,7 +4,8 @@ import { LoginDTO, RegisterDTO, ForgetPasswordDTO, ResetPasswordDTO } from "../d
 import { cannotSingUpAsSystemAdminError, userAlreadyExistsError, incorrectCredentialsError, InvalidOTPError, userNotFoundError } from "../auth.errors";
 import { updatePasswordResetConsumedAt, createPasswordReset, findLatestPasswordResetByUserId } from "../repository/password-reset.repo";
 import { comparePassword, createAccessToken, createAuthTokens, createRefreshToken, GenerateOTP, hashOTP, hashPassword, verifyRefreshToken } from "../auth.utils";
-import {mintuesToMilliseconds, toUserResponse} from "../../../common/utils/utils"
+import { toUserResponse} from "../../../common/utils/utils"
+import { toMs } from "../../../common/utils/time";
 
 export class AuthService {
 
@@ -56,7 +57,7 @@ export class AuthService {
         await createPasswordReset({
             userId: user.id,
             otpHash: hashedOTP,
-            expiresAt: new Date(Date.now() + mintuesToMilliseconds(10)), // 10 minutes from now
+            expiresAt: new Date(Date.now() + toMs(10,'m')), // 10 minutes from now
             createdAt: new Date(),
         });
 
@@ -79,15 +80,10 @@ export class AuthService {
         await updatePasswordResetConsumedAt(reset.id);
     }
 
-    refresh = async(refreshToken: string) =>{
+    refresh = async(refreshToken: string) => {
+        if (!refreshToken) throw incorrectCredentialsError;
         const payload = verifyRefreshToken(refreshToken)
-        const user = await findUserById(payload.userId);
-        if(!user) throw userNotFoundError;
-        const accessToken = createAccessToken({
-            userId: payload.userId,
-            email: payload.email,
-            role: payload.role,
-        });
+        const accessToken = createAccessToken({ userId: payload.userId, email: payload.email, role: payload.role, });
         return { accessToken };
     }
 }

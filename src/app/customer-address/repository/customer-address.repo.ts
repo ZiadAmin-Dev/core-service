@@ -1,6 +1,6 @@
 import { db } from "../../../common/knex/knex";
-import { Address } from "../entity/address.entity";
-import { UpdateAddressData } from "../address.utils";
+import { CustomerAddress } from "../entity/customer-address.entity";
+import { UpdateAddressData } from "../customer-address.utils";
 
 const ADDRESS_COLUMNS = [
     "id",
@@ -20,7 +20,7 @@ const ADDRESS_COLUMNS = [
 ];
 
 function toEntity(row: any) {
-    return new Address({
+    return new CustomerAddress({
         id: row.id,
         userId: row.user_id,
         label: row.label,
@@ -60,17 +60,17 @@ function toDatabaseUpdate(data: UpdateAddressData) {
 //========================================================================================
 //                                  FIND Address METHODS
 //========================================================================================
-export async function findAddressById(id: number): Promise<Address | undefined> {
+export async function findAddressById(id: number): Promise<CustomerAddress | undefined> {
     const row = await db("customer_addresses").select(ADDRESS_COLUMNS).where("id", id).first();
     return row ? toEntity(row) : undefined;
 }
 
-export async function findAddressesByUserId(userId: number): Promise<Address[]> {
+export async function findAddressesByUserId(userId: number): Promise<CustomerAddress[]> {
     const rows = await db("customer_addresses").select(ADDRESS_COLUMNS).where("user_id", userId);
     return rows.map(toEntity);
 }
 
-export async function findAddressByIdAndUserId(addressId: number ,userId: number): Promise<Address | undefined> {
+export async function findAddressByIdAndUserId(addressId: number ,userId: number): Promise<CustomerAddress | undefined> {
     const row = await db("customer_addresses").select(ADDRESS_COLUMNS).where({"id": addressId, "user_id": userId,}).first();
     return row ? toEntity(row) : undefined;
 }
@@ -79,7 +79,7 @@ export async function findAddressByIdAndUserId(addressId: number ,userId: number
 //                                  Create Address METHODS
 //========================================================================================
 
-export async function createAddress(address: Partial<Address>): Promise<Address> {
+export async function createAddress(address: Partial<CustomerAddress>): Promise<CustomerAddress> {
 
     const [row] = await db("customer_addresses")
         .insert({
@@ -102,28 +102,22 @@ export async function createAddress(address: Partial<Address>): Promise<Address>
 }
 
 
+//========================================================================================
+//                                  Update Address METHODS
+//========================================================================================
 
-
-
-
-
-
-
-
-export async function updateAddress(addressId: number, userId: number, data: UpdateAddressData): Promise<void> {
-
-    await db("customer_addresses").where({id: addressId, user_id: userId,}).update(toDatabaseUpdate(data))
+export async function updateAddress(addressId: number, data: UpdateAddressData): Promise<CustomerAddress> {
+    const [row] = await db("customer_addresses").where({ id: addressId }).update(toDatabaseUpdate(data)).returning(ADDRESS_COLUMNS);
+    return toEntity(row);
 }
 
+export async function clearDefaultByUserId(userId: number): Promise<void> {
+    await db("customer_addresses").where("user_id", userId).where("is_default", true).update({is_default: false});
+}
 
-
-
-
-
-
-
-
-
+//========================================================================================
+//                                  Delete Address METHODS
+//========================================================================================
 
 export async function deleteAddress(addressId: number, userId: number): Promise<void> {
     await db("customer_addresses").where({ id: addressId, user_id: userId }).del();

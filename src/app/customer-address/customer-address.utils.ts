@@ -1,4 +1,4 @@
-import { Type } from "./entity/enums";
+import { AddressType } from "./entity/enums";
 
 export interface UpdateAddressData{
     label?: string;
@@ -7,7 +7,7 @@ export interface UpdateAddressData{
     street?: string;
     building?: string;
     apartmentNumber?: string;
-    type?: Type;
+    type?: AddressType;
     lat?: number;
     lng?: number;
     isDefault?: boolean;

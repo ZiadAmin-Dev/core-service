@@ -3,8 +3,7 @@ import { env } from "../../common/config/env";
 import jwt, { SignOptions } from "jsonwebtoken";
 import crypto from "crypto";
 import { Response } from "express";
-import { hoursToMilliseconds, daysToMilliseconds} from "../../common/utils/utils"
-import { User } from "../user/entity/user.entity"
+import { toMs } from "../../common/utils/time";
 
 export interface JwtPayload {
     userId: number;
@@ -68,13 +67,13 @@ export function setAuthCookies(res: Response, accessToken: string, refreshToken:
     res.cookie("access_token", accessToken, {
         httpOnly: true,
         secure: secure,
-        maxAge: hoursToMilliseconds(1),
+        maxAge: toMs(1, 'h'),
     });
 
     res.cookie("refresh_token", refreshToken, {
         httpOnly: true,
         secure: secure,
-        maxAge: daysToMilliseconds(7),
+        maxAge: toMs(7,'d'),
         path: "/api/auth/refresh",
     });
 }
@@ -86,6 +85,6 @@ export function setAccessTokenCookies(res: Response, accessToken: string) {
     res.cookie("access_token", accessToken, {
         httpOnly: true,
         secure: secure,
-        maxAge: hoursToMilliseconds(1),
+        maxAge: toMs(1, 'h'),
     });
 }

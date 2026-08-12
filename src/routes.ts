@@ -2,7 +2,7 @@ import { Router } from "express";
 import { healthRouter } from "./app/health/health.routes";
 import { authRouter } from "./app/auth/auth.routes";
 import { userRouter } from "./app/user/user.routes";
-import { addressRouter } from "./app/address/addresses.routes";
+import { addressRouter } from "./app/customer-address/customer-address.routes";
 
 export const routes = Router();
 

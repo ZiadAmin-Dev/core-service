@@ -1,6 +1,6 @@
-import { Type } from "./enums"
+import { AddressType } from "./enums"
 
-export class Address{
+export class CustomerAddress{
     id: number;
     userId: number;
     label: string;
@@ -9,14 +9,14 @@ export class Address{
     street: string;
     building: string;
     apartmentNumber: string;
-    type: Type;
+    type: AddressType;
     lat: number;
     lng: number;
     isDefault: boolean;
     createdAt: Date;
     updatedAt: Date;
 
-    constructor(data: Partial<Address>){
+    constructor(data: Partial<CustomerAddress>){
         this.id = data.id!;
         this.userId = data.userId!;
         this.label = data.label!;

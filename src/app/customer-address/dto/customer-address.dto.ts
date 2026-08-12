@@ -9,9 +9,9 @@ import {
     MaxLength,
     IsNumber
 } from "class-validator";
-import { Type } from "../entity/enums";
+import { AddressType } from "../entity/enums";
 
-export class AddressDTO {
+export class createAddressDTO {
 
     @IsString()
     @IsNotEmpty()
@@ -43,8 +43,8 @@ export class AddressDTO {
     @MaxLength(50)
     apartmentNumber?: string;
 
-    @IsEnum(Type)
-    type!: Type;
+    @IsEnum(AddressType)
+    type!: AddressType;
 
     @IsLatitude()
     lat!: number;
@@ -93,8 +93,8 @@ export class UpdateAddressDTO {
     apartmentNumber?: string;
 
     @IsOptional()
-    @IsEnum(Type)
-    type?: Type;
+    @IsEnum(AddressType)
+    type?: AddressType;
 
     @IsOptional()
     @IsLatitude()

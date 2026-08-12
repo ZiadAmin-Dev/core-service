@@ -118,6 +118,7 @@ export async function updateUserPassword(id: number, password: string) :Promise<
     await db("users").where("id", id).update({password_hash: password});
 }
 
-export async function updateUserProfile(id: number, data: UpdateUserProfileData) {
-    await db("users").where("id", id).update(data);
+export async function updateUserProfile(id: number, data: UpdateUserProfileData): Promise<User> {
+    const [row] = await db("users").where("id", id).update(data).returning(USER_COLUMNS);
+    return toEntity(row);
 }
