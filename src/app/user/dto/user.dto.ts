@@ -1,5 +1,4 @@
-import { IsEmail, IsEnum, IsString, IsStrongPassword, MaxLength, MinLength, IsPhoneNumber, IsNotEmpty, isEAN, Length, minLength, IsOptional } from "class-validator";
-import { SystemRole } from "../entity/enums";
+import {  IsString, MaxLength, MinLength, IsOptional } from "class-validator";
 
 export class UpdateUserDTO {
     @IsOptional()

@@ -1,6 +1,6 @@
+import { Knex } from "knex";
 import { db } from "../../../common/knex/knex";
 import { User } from "../entity/user.entity";
-import { UpdateUserProfileData } from "../user.utils"
 
 const USER_COLUMNS = [ 
     "id", 
@@ -95,15 +95,15 @@ export async function findUserExistsByPhone(phone: string): Promise<Boolean> {
 //========================================================================================
 //                                  CREATE METHODS
 //========================================================================================
-export async function createUser(user: Partial<User>): Promise<User> {
-    const [row] = await db("users").insert({
-        email: user.email,
-        phone: user.phone,
-        name: user.name,
-        password_hash: user.passwordHash,
-        system_role: user.systemRole,
-        created_at: user.createdAt,
-        updated_at: user.updatedAt
+export async function createUser(data: Partial<User>, conn: Knex = db): Promise<User> {
+    const [row] = await conn("users").insert({
+        email: data.email,
+        phone: data.phone,
+        name: data.name,
+        password_hash: data.passwordHash,
+        system_role: data.systemRole,
+        created_at: data.createdAt,
+        updated_at: data.updatedAt
     }).returning(USER_COLUMNS);
 
     return toEntity(row);
@@ -118,7 +118,8 @@ export async function updateUserPassword(id: number, password: string) :Promise<
     await db("users").where("id", id).update({password_hash: password});
 }
 
-export async function updateUserProfile(id: number, data: UpdateUserProfileData): Promise<User> {
-    const [row] = await db("users").where("id", id).update(data).returning(USER_COLUMNS);
+
+export async function updateUserProfile(id: number, data: Partial<{name:string, phone:string}>): Promise<User> {
+    const [row] = await db("users").where("id", id).update({...data, updated_at: new Date()}).returning(USER_COLUMNS);
     return toEntity(row);
 }

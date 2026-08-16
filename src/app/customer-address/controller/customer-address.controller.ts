@@ -16,7 +16,7 @@ export class CustomerAddressController{
     createAddress = async (req: Request, res: Response, next: NextFunction) => {
         try{
             const data = await validateBody(createAddressDTO, req.body);
-            const address = await this.addressService.createAddress(data, req.user!.userId);
+            const address = await this.addressService.create(data, req.user!.userId);
             res.status(201).json({ message: "Address added", address: address});
         } catch(err) { next(err) ; }
     }
@@ -25,7 +25,7 @@ export class CustomerAddressController{
         try {
             const addressId = Number(req.params.addressId);
             const data = await validateBody(UpdateAddressDTO, req.body);
-            const address = await this.addressService.updateAddress(data, addressId, req.user!.userId);
+            const address = await this.addressService.update(data, addressId, req.user!.userId);
         res.status(200).json({ message: "Address updated", address });
         } catch (err) { next(err); }
     }
@@ -33,7 +33,7 @@ export class CustomerAddressController{
     removeAddress = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const addressId = Number(req.params.addressId);
-            await this.addressService.removeAddress(addressId, req.user!.userId);
+            await this.addressService.remove(addressId, req.user!.userId);
             res.status(200).json({ message: "Address deleted" });
         } catch (err) { next(err); }
     }

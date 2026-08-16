@@ -13,7 +13,7 @@ export class AuthController {
             const data = await validateBody(RegisterDTO, req.body);
             const result = await this.authService.register(data);
             setAuthCookies(res, result.accessToken, result.refreshToken)
-            res.status(201).json(result); //201 Created
+            res.status(201).json({message: "User registered successfully", result}); //201 Created
         } catch (err) { next(err); }
     }
 

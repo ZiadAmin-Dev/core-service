@@ -22,7 +22,7 @@ export function createRefreshToken(payload: JwtPayload) : string {
 }
 
 export function createAuthTokens(payload: JwtPayload) {
-    return{
+    return {
         accessToken: createAccessToken(payload),
         refreshToken: createRefreshToken(payload),
     }

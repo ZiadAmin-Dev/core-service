@@ -8,5 +8,6 @@ export function toUserResponse(user: User) {
         name: user.name,
         systemRole: user.systemRole,
         createdAt: user.createdAt,
+        updatedAt: user.updatedAt
     };
 }

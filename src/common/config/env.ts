@@ -44,6 +44,6 @@ export const env = {
         refreshExpiresIn: parsed.REFRESH_EXPIRES_IN,
     },
     security:{
-        bcryptSaltRounds: parsed.BCRYPT_SALT_ROUNDS,
+        bcryptSaltRounds: Number(parsed.BCRYPT_SALT_ROUNDS,)
     }
 }

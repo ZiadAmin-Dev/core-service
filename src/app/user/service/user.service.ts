@@ -1,6 +1,5 @@
 import { findUserById, findUserExistsByPhone } from "../../user/repository/users.repo";
 import { userNotFoundError, phoneAlreadyInUse } from "../user.errors"
-import { SystemRole } from "../entity/enums";
 import { UpdateUserDTO } from "../dto/user.dto"
 import { updateUserProfile } from "../repository/users.repo"
 import { toUserResponse } from "../../../common/utils/utils";

@@ -1,13 +1,17 @@
 import { SystemRole } from "../../user/entity/enums";
-import { createUser, findUserExistsByEmailOrPhone, findUserByEmail, findUserExistsByEmail, updateUserPassword, findUserById } from "../../user/repository/users.repo";
+import { createUser, findUserExistsByEmailOrPhone, findUserByEmail, updateUserPassword, } from "../../user/repository/users.repo";
 import { LoginDTO, RegisterDTO, ForgetPasswordDTO, ResetPasswordDTO } from "../dto/auth.dto";
-import { cannotSingUpAsSystemAdminError, userAlreadyExistsError, incorrectCredentialsError, InvalidOTPError, userNotFoundError } from "../auth.errors";
+import { cannotSingUpAsSystemAdminError, userAlreadyExistsError, incorrectCredentialsError, InvalidOTPError, userNotFoundError, restaurantDataIsRequiredError } from "../auth.errors";
 import { updatePasswordResetConsumedAt, createPasswordReset, findLatestPasswordResetByUserId } from "../repository/password-reset.repo";
 import { comparePassword, createAccessToken, createAuthTokens, createRefreshToken, GenerateOTP, hashOTP, hashPassword, verifyRefreshToken } from "../auth.utils";
 import { toUserResponse} from "../../../common/utils/utils"
 import { toMs } from "../../../common/utils/time";
+import { RestaurantService, restaurantService} from "../../restaurant/service/restaurant.service";
+import { db } from "../../../common/knex/knex";
 
 export class AuthService {
+
+    constructor(private readonly restaurantService: RestaurantService){}
 
     register = async(data: RegisterDTO )=> {
         
@@ -15,22 +19,36 @@ export class AuthService {
         const existing: Boolean = await findUserExistsByEmailOrPhone(data.email, data.phone);
         if(existing) throw userAlreadyExistsError
         const hashedPassword = await hashPassword(data.password);
-        const user = await createUser ({
-            email: data.email,
-            phone: data.phone,
-            name: data.name,
-            passwordHash: hashedPassword,
-            systemRole: data.role,
-            createdAt: new Date(),
-            updatedAt: new Date()
-        });
+        const trx = await db.transaction();
+        let user
+        let restaurant
+        try{
+            user = await createUser ({
+                email: data.email,
+                phone: data.phone,
+                name: data.name,
+                passwordHash: hashedPassword,
+                systemRole: data.role,
+                createdAt: new Date(),
+                updatedAt: new Date()
+            }, trx);
+
+            if(data.role == SystemRole.RESTAURANT_USER) {
+                if(data.restaurant == undefined) throw restaurantDataIsRequiredError;
+                restaurant = await this.restaurantService.create(user.id, data.restaurant, trx);
+            }
+            await trx.commit();
+        } catch(err) {
+            await trx.rollback()
+            throw err }
+
         const payload = { userId: user.id, email: user.email, role: data.role };
         const tokens = createAuthTokens(payload);
         return {
-            message: "User registered successfully",
             accessToken: tokens.accessToken,
             refreshToken: tokens.refreshToken,
-            user: toUserResponse(user)
+            user: toUserResponse(user),
+            restaurant
         }
     }
 
@@ -88,4 +106,4 @@ export class AuthService {
     }
 }
 
-export const authService = new AuthService();
+export const authService = new AuthService(restaurantService);
