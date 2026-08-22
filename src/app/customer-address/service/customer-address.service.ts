@@ -20,7 +20,7 @@ function toResponse(address: any) {
 }
 
 export class CustomerAddressService{
-    getAddressesByUserId = async (userId: number): Promise<CustomerAddress[]> => {
+    getByUserId = async (userId: number): Promise<CustomerAddress[]> => {
         return findAddressesByUserId(userId);
     }
     

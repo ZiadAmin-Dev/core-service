@@ -46,6 +46,13 @@ export function toEntity(row: any): Branch {
 //========================================================================================
 //                                  FIND METHODS
 //========================================================================================
+
+export async function findBranchById(id: number) :Promise<Branch | undefined> {
+    const row = await db("restaurant_branches").select(BRANCH_COLUMNS).where("id", id).first();;
+    return row ? toEntity(row) : undefined;
+}
+
+
 export async function findNearbyBranches(lat: number, lng:number) :Promise<Branch[]> {
     const result = await db.raw(`
         SELECT 
@@ -68,6 +75,15 @@ export async function findNearbyBranches(lat: number, lng:number) :Promise<Branc
         return result.rows;
 }
 
+export async function findBranchesByRestaurantId(restaurantId: number) :Promise<Branch[]> {
+    const rows = await db("restaurant_branches").select(BRANCH_COLUMNS).where("restaurant_id", restaurantId);
+    return rows.map(toEntity);
+}
+
+export async function findActiveBranchesByRestaurantId(restaurantId: number): Promise<Branch[]> {
+    const rows = await db("restaurant_branches").select(BRANCH_COLUMNS).where({ restaurant_id: restaurantId, is_active: true });
+    return rows.map(toEntity);
+}
 
 //========================================================================================
 //                                  CREATE METHODS
@@ -89,6 +105,38 @@ export async function createBranch(data: Partial<Branch>, conn: Knex = db): Prom
         delivery_radius: data.deliveryRadius,
         currency: data.currency,
         commission: data.commission,
+    }).returning(BRANCH_COLUMNS);
+
+    return toEntity(row);
+}
+
+
+//========================================================================================
+//                                  Update METHODS
+//========================================================================================
+
+export async function updateBranch(id: number, data: Partial<{label: string, addressText: string, lat: number, lng: number, opensAt: string, closesAt: string, deliveryRadius: number, currency: string, acceptOrders: boolean}>): Promise<Branch> {
+    const [row] = await db("restaurant_branches").where("id", id).update({
+        ...(data.label !== undefined && {label: data.label}),
+        ...(data.addressText !== undefined && {address_text: data.addressText}),
+        ...(data.lat !== undefined && {lat: data.lat}),
+        ...(data.lng !== undefined && {lng: data.lng}),
+        ...(data.opensAt !== undefined && {opens_at: data.opensAt}),
+        ...(data.closesAt !== undefined && {closes_at: data.closesAt}),
+        ...(data.deliveryRadius !== undefined && {delivery_radius: data.deliveryRadius}),
+        ...(data.currency !== undefined && {currency: data.currency}),
+        ...(data.acceptOrders !== undefined && {accept_orders: data.acceptOrders}),
+        updated_at: new Date(),
+    }).returning(BRANCH_COLUMNS);
+
+    return toEntity(row);
+}
+
+export async function updateBranchStatus(id: number, data: Partial<{isActive: boolean, commission: number}>): Promise<Branch> {
+    const [row] = await db("restaurant_branches").where("id", id).update({
+        ...(data.isActive !== undefined && {is_active: data.isActive}),
+        ...(data.commission !== undefined && {commission: data.commission}),
+        updated_at: new Date(),
     }).returning(BRANCH_COLUMNS);
 
     return toEntity(row);

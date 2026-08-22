@@ -8,7 +8,7 @@ export class CustomerAddressController{
 
     getAll = async (req: Request, res: Response, next: NextFunction) => {
         try{
-            const addresses = await this.addressService.getAddressesByUserId(req.user?.userId!)
+            const addresses = await this.addressService.getByUserId(req.user?.userId!)
             res.status(200).json({data: addresses})
         } catch(err) { next(err) ; }
     }

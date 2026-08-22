@@ -6,6 +6,7 @@ import {
     IsNumber,
     IsString,
     Min,
+    IsOptional
 } from "class-validator";
 import { Currency } from "../entity/enums";
 
@@ -42,4 +43,53 @@ export class CreateBranchDTO {
 
     @IsEnum(Currency)
     currency!: Currency;
+}
+
+export class UpdateBranchDTO{
+    @IsOptional()
+    @IsString()
+    label?: string;
+
+    @IsOptional()
+    @IsString()
+    addressText?: string;
+
+    @IsOptional()
+    @IsNumber()
+    lat?: number;
+
+    @IsOptional()
+    @IsNumber()
+    lng?: number;
+
+    @IsOptional()
+    @IsString()
+    opensAt?: string;
+
+    @IsOptional()
+    @IsString()
+    closesAt?: string;
+
+    @IsOptional()
+    @IsNumber()
+    deliveryRadius?: number;
+
+    @IsOptional()
+    @IsEnum(Currency)
+    currency?: Currency;
+
+    @IsOptional()
+    @IsBoolean()
+    acceptOrders?: boolean;
+
+}
+
+export class UpdateBranchStatusDTO {
+    @IsOptional()
+    @IsBoolean()
+    isActive?: boolean;
+
+    @IsOptional()
+    @IsNumber()
+    commission?: number;
 }

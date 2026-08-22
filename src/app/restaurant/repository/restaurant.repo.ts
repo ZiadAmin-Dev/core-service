@@ -1,6 +1,8 @@
 import { Knex } from "knex";
 import { db } from "../../../common/knex/knex";
 import { Restaurant } from "../entity/restaurant.entity"
+import { RestaurantStatus } from "../entity/enums";
+import { date } from "zod";
 
 const RESTAURANT_COLUMNS = [
     "id",
@@ -38,33 +40,18 @@ export async function findAllRestaurants(): Promise<Restaurant[]> {
     return rows.map(toEntity)
 }   
 
-export async function findActiveRestaurants(): Promise<Restaurant[]> {
-    const rows = await db("restaurants").select(RESTAURANT_COLUMNS).where("status", "active");
-    return rows.map(toEntity)
-}
-
-export async function findDisabledRestaurants(): Promise<Restaurant[]> {
-    const rows = await db("restaurants").select(RESTAURANT_COLUMNS).where("status", "disabled");
-    return rows.map(toEntity)
-}
-
-export async function findSuspendedRestaurants(): Promise<Restaurant[]> {
-    const rows = await db("restaurants").select(RESTAURANT_COLUMNS).where("status", "suspended");
-    return rows.map(toEntity)
-}
-
-export async function findPendingRestaurants(): Promise<Restaurant[]> {
-    const rows = await db("restaurants").select(RESTAURANT_COLUMNS).where("status", "pending");
-    return rows.map(toEntity)
-}
-
-export async function findRestaurantById(id: number): Promise<Restaurant> {
+export async function findRestaurantById(id: number): Promise<Restaurant | undefined> {
     const row = await db("restaurants").select(RESTAURANT_COLUMNS).where("id", id).first();
-    return toEntity(row);
+    return row ? toEntity(row) : undefined;
 }
 
 export async function findRestaurantsByOwnerId(ownerId: number): Promise<Restaurant[]> {
     const rows = await db("restaurants").select(RESTAURANT_COLUMNS).where("owner_id", ownerId);
+    return rows.map(toEntity)
+}
+
+export async function findRestaurantsByStatus(restaurantStatus: RestaurantStatus): Promise<Restaurant[]> {
+    const rows = await db("restaurants").select(RESTAURANT_COLUMNS).where("status", restaurantStatus);
     return rows.map(toEntity)
 }
 
@@ -86,5 +73,29 @@ export async function createRestaurant(restaurant: Partial<Restaurant>, conn: Kn
 }
 
 //========================================================================================
-//                                  Update Address METHODS
+//                                  Update METHODS
 //========================================================================================
+export async function updateRestaurant(id: number, data: Partial<{ name: string, logoURL: string, primaryCountry: string}>): Promise<Restaurant | undefined> {
+    const [row] = await db("restaurants")
+        .where("id", id)
+        .update({
+            ...(data.name !== undefined && { name: data.name }),
+            ...(data.logoURL !== undefined && { logo_url: data.logoURL }),
+            ...(data.primaryCountry !== undefined && {
+                primary_country: data.primaryCountry,
+            }),
+            updated_at: new Date(),
+        })
+        .returning(RESTAURANT_COLUMNS);
+
+    return row ? toEntity(row) : undefined;
+}
+
+export async function updateRestaurantStatus(id: number, status: RestaurantStatus): Promise<Restaurant> {
+    const [row] = await db("restaurants")
+        .where("id", id)
+        .update({status: status, status_updated_at: new Date()})
+        .returning(RESTAURANT_COLUMNS);
+
+    return toEntity(row);
+}

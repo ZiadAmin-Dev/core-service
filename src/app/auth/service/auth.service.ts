@@ -3,7 +3,7 @@ import { createUser, findUserExistsByEmailOrPhone, findUserByEmail, updateUserPa
 import { LoginDTO, RegisterDTO, ForgetPasswordDTO, ResetPasswordDTO } from "../dto/auth.dto";
 import { cannotSingUpAsSystemAdminError, userAlreadyExistsError, incorrectCredentialsError, InvalidOTPError, userNotFoundError, restaurantDataIsRequiredError } from "../auth.errors";
 import { updatePasswordResetConsumedAt, createPasswordReset, findLatestPasswordResetByUserId } from "../repository/password-reset.repo";
-import { comparePassword, createAccessToken, createAuthTokens, createRefreshToken, GenerateOTP, hashOTP, hashPassword, verifyRefreshToken } from "../auth.utils";
+import { comparePassword, createAccessToken, createAuthTokens, GenerateOTP, hashOTP, hashPassword, verifyRefreshToken } from "../auth.utils";
 import { toUserResponse} from "../../../common/utils/utils"
 import { toMs } from "../../../common/utils/time";
 import { RestaurantService, restaurantService} from "../../restaurant/service/restaurant.service";
@@ -16,12 +16,13 @@ export class AuthService {
     register = async(data: RegisterDTO )=> {
         
         if(data.role == SystemRole.SYSTEM_ADMIN) throw cannotSingUpAsSystemAdminError;
-        const existing: Boolean = await findUserExistsByEmailOrPhone(data.email, data.phone);
-        if(existing) throw userAlreadyExistsError
+        const existing = await findUserExistsByEmailOrPhone(data.email, data.phone);
+        if(existing) throw userAlreadyExistsError;
         const hashedPassword = await hashPassword(data.password);
+        
         const trx = await db.transaction();
-        let user
-        let restaurant
+        let user;
+        let restaurant;
         try{
             user = await createUser ({
                 email: data.email,
