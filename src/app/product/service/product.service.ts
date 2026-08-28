@@ -2,7 +2,7 @@ import { notAuthorisedError } from "../../../common/auth/errors";
 import { Restaurant } from "../../restaurant/entity/restaurant.entity";
 import { findRestaurantById } from "../../restaurant/repository/restaurant.repo";
 import { restaurantNotFoundError } from "../../restaurant/resraurant.errors";
-import { SystemRole } from "../../user/entity/enums";
+import { SystemRole } from "../../user/user.enums";
 import { CreateProductDTO, UpdateProductDTO } from "../dto/product.dto";
 import { productNotFoundError } from "../product.errors";
 import { createCategory, findCategoriesByRestaurant, findCategoryByName } from "../repository/category.repo"

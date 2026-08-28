@@ -9,6 +9,10 @@ export interface JwtPayload {
     userId: number;
     email: string;
     role: string;
+    //for restaurant users only
+    restaurantId?: number;
+    restaurantRole?: string;
+    branchIds?: number[];
 }
 
 export function createAccessToken(payload: JwtPayload) : string {
@@ -41,7 +45,7 @@ export async function comparePassword(password: string, hashedPassword: string):
 
 
 
-export function GenerateOTP(): string {
+export function generateOTP(): string {
     return crypto.randomInt(100000, 999999).toString();
 }
 

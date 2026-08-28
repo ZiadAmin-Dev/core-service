@@ -1,5 +1,5 @@
 import { IsEmail, IsEnum, IsString, IsStrongPassword, MaxLength, MinLength, IsPhoneNumber, IsNotEmpty, isEAN, Length, IsOptional, isString, ValidateNested } from "class-validator";
-import { SystemRole } from "../../user/entity/enums";
+import { SystemRole } from "../../user/user.enums";
 import { Type } from "class-transformer";
 
 export class RegisterDTO {

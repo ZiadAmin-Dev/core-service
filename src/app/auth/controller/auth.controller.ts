@@ -22,7 +22,7 @@ export class AuthController {
             const data = await validateBody(LoginDTO, req.body);
             const result = await this.authService.login(data);
             setAuthCookies(res, result.accessToken, result.refreshToken)
-            res.status(200).json(result); //200 OK
+            res.status(200).json({message: "User logged in successfully", result}); //200 OK
         } catch (err) { next(err); }
     }
 
@@ -52,6 +52,14 @@ export class AuthController {
         } catch(err){
             next(err)
         }
+    }
+
+    acceptInvite = async (req: Request, res: Response, next: NextFunction) => {
+        try{
+            const data = await validateBody(ResetPasswordDTO, req.body);
+            await this.authService.acceptInvite(data);
+            res.status(200).json({message: "Invite accepted successfully, Please login again"});
+        } catch (err) { next(err); }
     }
 }
 

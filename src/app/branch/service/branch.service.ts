@@ -1,7 +1,7 @@
 import { notAuthorisedError } from "../../../common/auth/errors";
 import { findRestaurantById } from "../../restaurant/repository/restaurant.repo";
 import { restaurantNotFoundError } from "../../restaurant/resraurant.errors";
-import { SystemRole } from "../../user/entity/enums";
+import { SystemRole } from "../../user/user.enums";
 import { branchNotFoundError } from "../branch.errors";
 import { CreateBranchDTO, UpdateBranchDTO, UpdateBranchStatusDTO } from "../dto/branch.dto";
 import { Branch } from "../entity/branch.entity";

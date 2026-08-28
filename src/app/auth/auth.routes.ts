@@ -8,3 +8,4 @@ authRouter.post("/login", authController.login);
 authRouter.post("/forget-password", authController.forgetPassword);
 authRouter.post("/reset-password", authController.resetPassword);
 authRouter.post("/refresh", authController.refresh)
+authRouter.post("/accept-invite", authController.acceptInvite)

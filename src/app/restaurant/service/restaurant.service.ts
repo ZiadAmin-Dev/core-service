@@ -5,7 +5,7 @@ import { Restaurant } from "../entity/restaurant.entity";
 import { createRestaurant, findRestaurantsByStatus, findAllRestaurants, findRestaurantById, updateRestaurant, updateRestaurantStatus } from "../repository/restaurant.repo";
 import { restaurantNotFoundError } from "../resraurant.errors";
 import { UpdateRestaurantDTO } from "../dto/restaurant.dto";
-import { SystemRole } from "../../user/entity/enums";
+import { SystemRole } from "../../user/user.enums";
 import { notAuthorisedError } from "../../../common/auth/errors";
 
 

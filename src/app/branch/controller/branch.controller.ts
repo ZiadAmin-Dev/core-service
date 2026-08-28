@@ -2,7 +2,7 @@ import { BranchService, branchService } from "../service/branch.service";
 import { validateBody } from "../../../common/validation/validate";
 import { Request, Response, NextFunction } from "express";
 import { CreateBranchDTO, UpdateBranchDTO, UpdateBranchStatusDTO } from "../dto/branch.dto";
-import { SystemRole } from "../../user/entity/enums";
+import { SystemRole } from "../../user/user.enums";
 
 
 export class BranchController{
