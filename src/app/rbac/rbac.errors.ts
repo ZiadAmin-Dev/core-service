@@ -1,4 +1,4 @@
-import { AppError } from "../../common/error/appError";
+import { AppError } from "../../lib/error/appError";
 
 // Restaurant Member Errors
 export const cannotCreateOwnerMember = new AppError("Not allowed to create another owner", 400); //bad request

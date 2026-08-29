@@ -1,5 +1,5 @@
 import { BranchService, branchService } from "../service/branch.service";
-import { validateBody } from "../../../common/validation/validate";
+import { validateBody } from "../../../lib/validation/validate";
 import { Request, Response, NextFunction } from "express";
 import { CreateBranchDTO, UpdateBranchDTO, UpdateBranchStatusDTO } from "../dto/branch.dto";
 import { SystemRole } from "../../user/user.enums";

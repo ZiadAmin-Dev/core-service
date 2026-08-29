@@ -1,4 +1,4 @@
-import { notAuthorisedError } from "../../../common/auth/errors";
+import { notAuthorisedError } from "../../../lib/auth/errors";
 import { findRestaurantById } from "../../restaurant/repository/restaurant.repo";
 import { restaurantNotFoundError } from "../../restaurant/resraurant.errors";
 import { SystemRole } from "../../user/user.enums";

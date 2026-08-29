@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { restaurantController } from "./controller/restaurant.controller";
-import { authnetcation } from "../../common/auth/guard";
+import { authnetcation } from "../../lib/auth/guard";
 
 export const restaurantRouter: Router = Router();
 

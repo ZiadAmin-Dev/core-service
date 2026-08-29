@@ -1,9 +1,9 @@
 import bcrypt from "bcrypt";
-import { env } from "../../common/config/env";
+import { env } from "../../lib/config/env";
 import jwt, { SignOptions } from "jsonwebtoken";
 import crypto from "crypto";
 import { Response } from "express";
-import { toMs } from "../../common/utils/time";
+import { toMs } from "../../lib/utils/time";
 
 export interface JwtPayload {
     userId: number;

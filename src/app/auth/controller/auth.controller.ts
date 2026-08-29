@@ -1,7 +1,7 @@
 import { RegisterDTO, LoginDTO, ForgetPasswordDTO, ResetPasswordDTO } from "../dto/auth.dto";
 import { AuthService, authService } from "../service/auth.service";
 import { Request, Response, NextFunction } from "express";
-import { validateBody } from "../../../common/validation/validate";
+import { validateBody } from "../../../lib/validation/validate";
 import { setAccessTokenCookies, setAuthCookies} from "../auth.utils"
 import { MissingRefreshTokenError } from "../auth.errors";
 

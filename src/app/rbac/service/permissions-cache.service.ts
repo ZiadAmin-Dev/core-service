@@ -1,5 +1,5 @@
 import { getPermissionsByRoleName } from "../repository/permissions.repo";
-import { InMemoryCacheService } from "../../../common/cache/cache.service";
+import { InMemoryCacheService } from "../../../lib/cache/cache.service";
 
 
 class PermissionCacheService{

@@ -2,7 +2,7 @@ import { findUserById, findUserExistsByPhone } from "../../user/repository/users
 import { userNotFoundError, phoneAlreadyInUse } from "../user.errors"
 import { UpdateUserDTO } from "../dto/user.dto"
 import { updateUserProfile } from "../repository/users.repo"
-import { toUserResponse } from "../../../common/utils/utils";
+import { toUserResponse } from "../../../lib/utils/utils";
 
 export class UserService{
     

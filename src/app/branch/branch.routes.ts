@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { branchController } from "./controller/branch.controller";
-import { authnetcation } from "../../common/auth/guard"
+import { authnetcation } from "../../lib/auth/guard"
 
 export const branchRouter = Router();
 

@@ -6,7 +6,7 @@ import { createRestaurant, findRestaurantsByStatus, findAllRestaurants, findRest
 import { restaurantNotFoundError } from "../resraurant.errors";
 import { UpdateRestaurantDTO } from "../dto/restaurant.dto";
 import { SystemRole } from "../../user/user.enums";
-import { notAuthorisedError } from "../../../common/auth/errors";
+import { notAuthorisedError } from "../../../lib/auth/errors";
 
 
 export class RestaurantService {

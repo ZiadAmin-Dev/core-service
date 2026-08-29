@@ -1,5 +1,5 @@
 import {Knex} from "knex";
-import {db} from "../../../common/knex/knex";
+import {db} from "../../../lib/knex/knex";
 import {MemberBranch} from "../entity/member-branch.entity";
 
 function toEntity(row: any): MemberBranch {

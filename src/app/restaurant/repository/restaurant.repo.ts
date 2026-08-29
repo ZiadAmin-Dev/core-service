@@ -1,5 +1,5 @@
 import { Knex } from "knex";
-import { db } from "../../../common/knex/knex";
+import { db } from "../../../lib/knex/knex";
 import { Restaurant } from "../entity/restaurant.entity"
 import { RestaurantStatus } from "../entity/enums";
 import { date } from "zod";

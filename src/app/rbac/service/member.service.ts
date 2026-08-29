@@ -1,6 +1,6 @@
-import { db } from "../../../common/knex/knex";
-import { toMs } from "../../../common/utils/time";
-import { toUserResponse } from "../../../common/utils/utils";
+import { db } from "../../../lib/knex/knex";
+import { toMs } from "../../../lib/utils/time";
+import { toUserResponse } from "../../../lib/utils/utils";
 import { userAlreadyExistsError } from "../../auth/auth.errors";
 import { generateOTP, hashOTP } from "../../auth/auth.utils";
 import { createPasswordReset } from "../../auth/repository/password-reset.repo";

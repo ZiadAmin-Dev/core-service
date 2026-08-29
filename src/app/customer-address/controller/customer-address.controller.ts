@@ -1,5 +1,5 @@
 import { CustomerAddressService, customerAddressService } from "../service/customer-address.service";
-import { validateBody } from "../../../common/validation/validate";
+import { validateBody } from "../../../lib/validation/validate";
 import { createAddressDTO, UpdateAddressDTO } from "../dto/customer-address.dto";
 import { Request, Response, NextFunction } from "express";
 

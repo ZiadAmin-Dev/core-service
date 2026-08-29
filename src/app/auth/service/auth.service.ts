@@ -4,10 +4,10 @@ import { LoginDTO, RegisterDTO, ForgetPasswordDTO, ResetPasswordDTO } from "../d
 import { cannotSingUpAsSystemAdminError, userAlreadyExistsError, incorrectCredentialsError, InvalidOTPError, userNotFoundError, restaurantDataIsRequiredError } from "../auth.errors";
 import { updatePasswordResetConsumedAt, createPasswordReset, findLatestPasswordResetByUserId } from "../repository/password-reset.repo";
 import { comparePassword, createAccessToken, createAuthTokens, generateOTP, hashOTP, hashPassword, verifyRefreshToken } from "../auth.utils";
-import { toUserResponse} from "../../../common/utils/utils"
-import { toMs } from "../../../common/utils/time";
+import { toUserResponse} from "../../../lib/utils/utils"
+import { toMs } from "../../../lib/utils/time";
 import { RestaurantService, restaurantService} from "../../restaurant/service/restaurant.service";
-import { db } from "../../../common/knex/knex";
+import { db } from "../../../lib/knex/knex";
 import { activateMemberByUserId, createRestaurantMember, findRestaurantMemberWithRole } from "../../rbac/repository/restaurant-member.repo";
 import { findBranchIdsByMemberId } from "../../rbac/repository/member-branch.repo";
 import { findRoleByName } from "../../rbac/repository/role.repo";

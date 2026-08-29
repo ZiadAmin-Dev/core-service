@@ -1,5 +1,5 @@
 import { RestaurantService, restaurantService } from "../service/restaurant.service";
-import { validateBody } from "../../../common/validation/validate";
+import { validateBody } from "../../../lib/validation/validate";
 import { Request, Response, NextFunction } from "express";
 import { UpdateRestaurantDTO, UpdateRestaurantStatusDTO } from "../dto/restaurant.dto";
 

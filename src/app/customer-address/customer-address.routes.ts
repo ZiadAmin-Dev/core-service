@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { customerAddressController } from "./controller/customer-address.controller";
-import { authnetcation } from "../../common/auth/guard"
+import { authnetcation } from "../../lib/auth/guard"
 
 export const addressRouter: Router = Router();
 

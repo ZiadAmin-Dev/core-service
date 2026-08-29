@@ -1,4 +1,4 @@
-import { db } from "../../../common/knex/knex";
+import { db } from "../../../lib/knex/knex";
 import { CustomerAddress } from "../entity/customer-address.entity";
 import { UpdateAddressData } from "../customer-address.utils";
 

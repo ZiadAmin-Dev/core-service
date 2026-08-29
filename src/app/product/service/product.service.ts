@@ -1,4 +1,4 @@
-import { notAuthorisedError } from "../../../common/auth/errors";
+import { notAuthorisedError } from "../../../lib/auth/errors";
 import { Restaurant } from "../../restaurant/entity/restaurant.entity";
 import { findRestaurantById } from "../../restaurant/repository/restaurant.repo";
 import { restaurantNotFoundError } from "../../restaurant/resraurant.errors";
@@ -8,7 +8,7 @@ import { productNotFoundError } from "../product.errors";
 import { createCategory, findCategoriesByRestaurant, findCategoryByName } from "../repository/category.repo"
 import { updateProductBranchDetails } from "../repository/product-branch-details.repo";
 import { createProduct, findProductById, findProductsByBranch, findProductsByRestaurant, updateProduct } from "../repository/product.repo";
-import { db } from "../../../common/knex/knex";
+import { db } from "../../../lib/knex/knex";
 import { findBranchById } from "../../branch/repository/branch.repo";
 import { branchNotFoundError } from "../../branch/branch.errors";
 

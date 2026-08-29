@@ -1,5 +1,5 @@
 import {Request, Response, NextFunction} from "express";
-import {validateBody} from "../../../common/validation/validate";
+import {validateBody} from "../../../lib/validation/validate";
 import {SystemRole} from "../../user/user.enums";
 import {CreateProductDTO, UpdateProductDTO} from "../dto/product.dto";
 import {ProductService, productService} from "../service/product.service";

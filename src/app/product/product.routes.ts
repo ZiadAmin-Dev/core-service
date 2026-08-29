@@ -1,5 +1,5 @@
 import {Router} from "express";
-import {authnetcation} from "../../common/auth/guard";
+import {authnetcation} from "../../lib/auth/guard";
 import {productController} from "./controller/product.controller";
 
 export const productRouter = Router();
