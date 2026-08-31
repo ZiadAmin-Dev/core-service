@@ -43,7 +43,7 @@ export class RegisterRestaurantDTO{
 
     @IsOptional()
     @IsString()
-    logoUrl!: string;
+    logoURL!: string;
 
     @IsString()
     @MinLength(1)

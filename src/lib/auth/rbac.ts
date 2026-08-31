@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { notAuthenticatedError } from "./errors"
+import { branchAccessRestrictedError, hasnotThisPermissionError, invalidOrMissingError, notAuthenticatedError, restaurantAccessRestrictedError } from "./errors"
 import { SystemRole } from "../../app/user/user.enums";
 import { permissionCacheService } from "../../app/rbac/service/permissions-cache.service";
 
@@ -25,13 +25,13 @@ export function rbac(options: RBACOptions) {
             if (req.user.role == SystemRole.RESTAURANT_USER) {
                 const permissions = await permissionCacheService.getPermissions(req.user.restaurantRole!);
                 if (!permissionCacheService.hasPermission(permissions, resource, action)) {
-                    return res.status(403).json({error: "Permission denied",})
+                    return next(hasnotThisPermissionError);
                 }
                 // pass
                 return next();
             }
             // if not restaurant ser -> throw err
-            return res.status(403).json({error: "Permission denied",})
+            next(hasnotThisPermissionError);
         }
         catch (err) {
             next(err);
@@ -42,29 +42,28 @@ export function rbac(options: RBACOptions) {
 export function requireRestaurantMember(paramName: string = 'restaurantId'){
     return async (req: Request, res: Response, next: NextFunction) =>{
         const restaurantId = parseInt(req.params[paramName] as string); // req.params.restaurantId
-        if (!restaurantId || isNaN(restaurantId)) return res.status(400).json({ message: "Invalid or missing restaurant ID parameter" });
+        if (!restaurantId || isNaN(restaurantId)) return next(invalidOrMissingError);
         
         if (req.user?.role == SystemRole.SYSTEM_ADMIN) return next();
 
-        if (Number(req.user?.restaurantId) !== restaurantId){
-            return res.status(403).json({ error: "Permission denied: Access to this restaurant is restricted", });
-        }
-        return next();
+        if (Number(req.user?.restaurantId) !== restaurantId) return next(restaurantAccessRestrictedError);
+
+        next();
     }
 }
 
-export async function requireBranchAccess(paramName:string ='branchId') {
+export function requireBranchAccess(paramName:string ='branchId') {
     return async (req: Request, res: Response, next: NextFunction) => { 
-        const branchId = parseInt(req.params[paramName] as string);
-        if (!branchId || isNaN(branchId)) return res.status(400).json({ message: "Invalid or missing branch ID parameter" });
-
         if (req.user?.role == SystemRole.SYSTEM_ADMIN || req.user?.restaurantRole === 'owner') return next();
         
+        const branchId = parseInt(req.params[paramName] as string) || parseInt(req.query[paramName] as string);
+        if (!branchId) return next();
+
         const userBranchIds = req.user?.branchIds || [];
         const hasAccess = userBranchIds.includes(branchId);
         
-        if (!hasAccess) return res.status(403).json({ error: "Permission denied: Access to this branch is restricted", })
+        if (!hasAccess) return next(branchAccessRestrictedError);
         
-        return next();
+        next();
     }
 }

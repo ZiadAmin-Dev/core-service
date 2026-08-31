@@ -11,12 +11,17 @@ import { db } from "../../../lib/knex/knex";
 import { activateMemberByUserId, createRestaurantMember, findRestaurantMemberWithRole } from "../../rbac/repository/restaurant-member.repo";
 import { findBranchIdsByMemberId } from "../../rbac/repository/member-branch.repo";
 import { findRoleByName } from "../../rbac/repository/role.repo";
-import { roleNotFoundError } from "../../rbac/rbac.errors";
+import { memberAccountDisabledError, memberNotFoundError, roleNotFoundError } from "../../rbac/rbac.errors";
 import { MemberStatus } from "../../rbac/member.enums";
+import { userService, UserService } from "../../user/service/user.service";
+import { memberService, MemberService } from "../../rbac/service/member.service";
 
 export class AuthService {
 
-    constructor(private readonly restaurantService: RestaurantService){}
+    constructor(private readonly restaurantService: RestaurantService,
+        private readonly userService: UserService,
+        private readonly memberService: MemberService,
+    ){}
 
     register = async (data: RegisterDTO) => {
         // 1. Initial validations (executed outside the transaction to save resources)
@@ -36,14 +41,12 @@ export class AuthService {
             const now = new Date();
 
             // Create base user record
-            user = await createUser({
+            user = await this.userService.create({
                 email: data.email,
                 phone: data.phone,
                 name: data.name,
-                passwordHash: hashedPassword,
+                password: hashedPassword,
                 systemRole: data.role,
-                createdAt: now,
-                updatedAt: now
             }, trx);
 
             // Handle restaurant user specifics
@@ -53,19 +56,8 @@ export class AuthService {
                 // Create restaurant entity
                 restaurant = await this.restaurantService.create(user.id, data.restaurant, trx);
 
-                // Fetch the role ID for 'owner'
-                const ownerRoleId = await findRoleByName('owner', trx);
-                if (!ownerRoleId) throw roleNotFoundError;
-
-                // Link user and restaurant as Owner in restaurant_members table
-                await createRestaurantMember({
-                    restaurantId: restaurant.id,
-                    userId: user.id,
-                    roleId: ownerRoleId,
-                    status: MemberStatus.ACTIVE,
-                    createdAt: now,
-                    updatedAt: now
-                }, trx);
+                // insert the owner member via member service
+                await this.memberService.createOwnerMember(restaurant.id, user.id, trx);
 
                 // Populate member info directly for the JWT payload
                 restaurantMemberInfo = {
@@ -82,13 +74,7 @@ export class AuthService {
         }
 
         // 3. Generate tokens and prepare response after successful transaction commit
-        const payload = {
-            userId: user.id,
-            email: user.email,
-            role: user.systemRole,
-            ...restaurantMemberInfo
-        };
-
+        const payload = { userId: user.id, email: user.email, role: user.systemRole, ...restaurantMemberInfo };
         const tokens = createAuthTokens(payload);
 
         return {
@@ -108,6 +94,9 @@ export class AuthService {
         let restaurantMemberInfo = null;
         if(user.systemRole == SystemRole.RESTAURANT_USER){
             const memberData = await findRestaurantMemberWithRole(user.id);
+            if (!memberData) {
+            throw memberAccountDisabledError; 
+        }
             if (memberData) {
                 const branchIds = await findBranchIdsByMemberId(memberData.member.id);
                 restaurantMemberInfo = {
@@ -172,4 +161,4 @@ export class AuthService {
     }
 }
 
-export const authService = new AuthService(restaurantService);
+export const authService = new AuthService(restaurantService, userService, memberService);

@@ -1,3 +1,4 @@
+import { Knex } from "knex";
 import { db } from "../../../lib/knex/knex";
 import { toMs } from "../../../lib/utils/time";
 import { toUserResponse } from "../../../lib/utils/utils";
@@ -5,16 +6,34 @@ import { userAlreadyExistsError } from "../../auth/auth.errors";
 import { generateOTP, hashOTP } from "../../auth/auth.utils";
 import { createPasswordReset } from "../../auth/repository/password-reset.repo";
 import { createUser, findUserExistsByEmail, findUserExistsByEmailOrPhone, findUserExistsByPhone } from "../../user/repository/users.repo";
+import { userService, UserService } from "../../user/service/user.service";
 import { SystemRole } from "../../user/user.enums";
-import { CreateMemberDTO } from "../dto/member.dto";
+import { CreateMemberDTO, UpdateMemberBranchesDTO, UpdateMemberDTO } from "../dto/member.dto";
 import { MemberBranch } from "../entity/member-branch.entity";
 import { MemberStatus } from "../member.enums";
-import { cannotCreateOwnerMember, roleNotFoundError } from "../rbac.errors";
-import { setMemberBranches } from "../repository/member-branch.repo";
-import { createRestaurantMember } from "../repository/restaurant-member.repo";
+import { cannotAssignBranchesToOwners, cannotCreateOwnerMember, cannotDeleteOwnerError, invalidBranchIdsError, memberNotFoundError, roleNotFoundError } from "../rbac.errors";
+import { countBranchesByIdsAndRestaurant, setMemberBranches } from "../repository/member-branch.repo";
+import { getPermissionsDetailsByRoleName } from "../repository/permissions.repo";
+import { createRestaurantMember, deleteMember, findMembersByRestaurantId, findMemberWithRoleName, updateMember } from "../repository/restaurant-member.repo";
 import { findRoleByName } from "../repository/role.repo";
+import { RestaurantMember } from "../entity/restaurant-member.entity";
 
 export class MemberService {
+    constructor(private readonly userService: UserService) {}
+
+    async createOwnerMember(restaurantId: number, userId: number, trx?: Knex.Transaction): Promise<RestaurantMember> {
+        const ownerRoleId = await findRoleByName('owner', trx);
+        if (!ownerRoleId) throw roleNotFoundError;
+        const now = new Date();
+        return createRestaurantMember({
+            restaurantId,
+            userId,
+            roleId: ownerRoleId,
+            status: MemberStatus.ACTIVE,
+            createdAt: now,
+            updatedAt: now,
+        }, trx);
+    }
 
     async createMember(restaurantId: number, data: CreateMemberDTO) {
         if(data.role == 'owner') throw cannotCreateOwnerMember;
@@ -25,16 +44,17 @@ export class MemberService {
         const roleId = await findRoleByName(data.role);
         if(!roleId) throw roleNotFoundError;
 
-        const result = await db.transaction(async (trx) => { 
+        const branchIds = data.branchIds || [];
+        await this.validateBranchOwnership(branchIds, restaurantId);
+
+        await db.transaction(async (trx) => { 
             const now = new Date();
-            const user = await createUser({
+            const user = await this.userService.create({
                 email: data.email,
                 name: data.name,
                 phone: data.phoneNumber,
-                passwordHash: '',
+                password: '',
                 systemRole: SystemRole.RESTAURANT_USER,
-                createdAt: now,
-                updatedAt: now,
             }, trx);
 
             const member = await createRestaurantMember(
@@ -48,7 +68,7 @@ export class MemberService {
                 }, trx
             )
 
-            const rows = data.branchIds.map(branchId => new MemberBranch({
+            const rows = branchIds.map(branchId => new MemberBranch({
                 branchId: branchId,
                 memberId: member.id,
                 createdAt: now,
@@ -57,11 +77,8 @@ export class MemberService {
             await setMemberBranches(member.id, rows, trx)
 
             // generate otp, create password reset record and send email
-            // generate an otp
             const otp = generateOTP();
-            // hash the otp
             const hashedOtp = hashOTP(otp);
-            // insert the otp
             await createPasswordReset({
                     userId: user.id,
                     otpHash: hashedOtp,
@@ -74,22 +91,104 @@ export class MemberService {
             console.log(`mocked email sent to "${user.email}" with OTP: ${otp}`);
 
             return {
-                user,
-                member,
-                branchIds: data.branchIds,
-                roleName: data.role
-            };
+                message: "Member invited successfully",
+                member: {
+                    id: member.id,
+                    userId: user.id,
+                    email: data.email,
+                    name: data.name,
+                    phone: data.phoneNumber,
+                    role: data.role,
+                    status: member.status,
+                    branchIds,
+                }
+            }
         });
+    }
+
+    async listMembers(restaurantId: number) {
+        const members = await findMembersByRestaurantId(restaurantId);
+        return {data: members};
+    }
+
+    async updateMember(restaurantId: number, memberId: number, data: UpdateMemberDTO) {
+        // single query: member + role name
+        const result = await findMemberWithRoleName(memberId);
+        if (!result || Number(result.member.restaurantId) !== Number(restaurantId)) {
+            throw memberNotFoundError;
+        }
+
+        const updateData: {roleId?: number, status?: string} = {};
+        if (data.role) {
+            const roleId = await findRoleByName(data.role);
+            if (!roleId) throw roleNotFoundError;
+            updateData.roleId = roleId;
+        }
+        if (data.status) {
+            updateData.status = data.status;
+        }
+
+        await updateMember(memberId, updateData);
+        return {message: "Member updated successfully"};
+    }
+
+    async deleteMember(restaurantId: number, memberId: number) {
+        // single query: member + role name (no N+1)
+        const result = await findMemberWithRoleName(memberId);
+        if (!result || Number(result.member.restaurantId) !== Number(restaurantId)) {
+            throw memberNotFoundError;
+        }
+        if (result.roleName === 'owner') {
+            throw cannotDeleteOwnerError;
+        }
+        await deleteMember(memberId);
+        return {message: "Member deleted successfully"};
+    }
+
+    async updateMemberBranches(restaurantId: number, memberId: number, data: UpdateMemberBranchesDTO) {
+        // single query: member + role name (no N+1)
+        const result = await findMemberWithRoleName(memberId);
+        if (!result || Number(result.member.restaurantId) !== Number(restaurantId)) {
+            throw memberNotFoundError;
+        }
+        if (result.roleName === 'owner') {
+            throw cannotAssignBranchesToOwners;
+        }
+
+        // validate branchIds belong to this restaurant (single COUNT query)
+        await this.validateBranchOwnership(data.branchIds, restaurantId);
+
+        const now = new Date();
+        const rows = data.branchIds.map(branchId => new MemberBranch({
+            branchId,
+            memberId: result.member.id,
+            createdAt: now,
+        }));
+        await setMemberBranches(memberId, rows);
+
         return {
-            id: result.member.id,
-            restaurantId,
-            user: toUserResponse(result.user),
-            role: result.roleName,
-            status: result.member.status,
-            branchIds: result.branchIds,
-            createdAt: result.member.createdAt
+            message: "Member branch assignments updated successfully",
+            branchIds: data.branchIds,
         };
     }
+
+    
+    async getRolePermissions(roleName: string) {
+        const role = await findRoleByName(roleName);
+        if (!role) throw roleNotFoundError;
+        const permissions = await getPermissionsDetailsByRoleName(roleName);
+        return {role: roleName, permissions};
+    }
+
+    async validateBranchOwnership(branchIds: number[], restaurantId: number) {
+        if (branchIds.length === 0) return;
+        //عدلي كم فرع من القايمة بتاعت الايديز دي يخص المطعم ده
+        const count = await countBranchesByIdsAndRestaurant(branchIds, restaurantId);
+        if (count !== branchIds.length) {
+            throw invalidBranchIdsError;
+        }
+    }
+
 }
 
-export const memberService = new MemberService();
+export const memberService = new MemberService(userService);
