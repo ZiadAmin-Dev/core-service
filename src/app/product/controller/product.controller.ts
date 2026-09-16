@@ -2,10 +2,13 @@ import {Request, Response, NextFunction} from "express";
 import {validateBody} from "../../../lib/validation/validate";
 import {SystemRole} from "../../user/user.enums";
 import {CreateProductDTO, UpdateProductDTO} from "../dto/product.dto";
-import {ProductService, productService} from "../service/product.service";
+import {ProductService} from "../service/product.service";
+import { inject, injectable } from "tsyringe";
+import { TOKENS } from "../../../lib/di/tokens";
 
+@injectable()
 export class ProductController {
-    constructor(private readonly productService: ProductService) {}
+    constructor(@inject(TOKENS.ProductService) private readonly productService: ProductService) {}
 
     findCategories = async (req: Request, res: Response, next: NextFunction) => {
         try {
@@ -77,5 +80,3 @@ export class ProductController {
         }
     }
 }
-
-export const productController = new ProductController(productService);

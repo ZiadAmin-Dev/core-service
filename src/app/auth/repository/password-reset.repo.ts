@@ -34,9 +34,12 @@ export async function createPasswordReset(passwordReset: Partial<PasswordReset>,
 }
 
 export async function findLatestPasswordResetByUserId(userId: number): Promise<PasswordReset | undefined> {
-    const row = await db("password_resets").select(
-        PASSWORD_RESET_COLUMNS
-    ).where("user_id", userId).whereNull("consumed_at").orderBy("id", "desc").first();
+    const row = await db("password_resets")
+        .select(PASSWORD_RESET_COLUMNS)
+        .where("user_id", userId)
+        .whereNull("consumed_at")
+        .orderBy("id", "desc")
+        .first();
 
     return toEntity(row);
 }

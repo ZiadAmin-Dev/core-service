@@ -1,26 +1,31 @@
 import { SystemRole } from "../../user/user.enums";
-import { createUser, findUserExistsByEmailOrPhone, findUserByEmail, updateUserPassword, } from "../../user/repository/users.repo";
+import { findUserExistsByEmailOrPhone, findUserByEmail, updateUserPassword, } from "../../user/repository/users.repo";
 import { LoginDTO, RegisterDTO, ForgetPasswordDTO, ResetPasswordDTO } from "../dto/auth.dto";
-import { cannotSingUpAsSystemAdminError, userAlreadyExistsError, incorrectCredentialsError, InvalidOTPError, userNotFoundError, restaurantDataIsRequiredError } from "../auth.errors";
+import { cannotSingUpAsSystemAdminError, userAlreadyExistsError, incorrectCredentialsError, InvalidOTPError, restaurantDataIsRequiredError } from "../auth.errors";
 import { updatePasswordResetConsumedAt, createPasswordReset, findLatestPasswordResetByUserId } from "../repository/password-reset.repo";
 import { comparePassword, createAccessToken, createAuthTokens, generateOTP, hashOTP, hashPassword, verifyRefreshToken } from "../auth.utils";
 import { toUserResponse} from "../../../lib/utils/utils"
-import { toMs } from "../../../lib/utils/time";
-import { RestaurantService, restaurantService} from "../../restaurant/service/restaurant.service";
+import { toMs } from "../../../pkg/utils/time";
+import { RestaurantService } from "../../restaurant/service/restaurant.service";
 import { db } from "../../../lib/knex/knex";
 import { activateMemberByUserId, createRestaurantMember, findRestaurantMemberWithRole } from "../../rbac/repository/restaurant-member.repo";
 import { findBranchIdsByMemberId } from "../../rbac/repository/member-branch.repo";
-import { findRoleByName } from "../../rbac/repository/role.repo";
-import { memberAccountDisabledError, memberNotFoundError, roleNotFoundError } from "../../rbac/rbac.errors";
-import { MemberStatus } from "../../rbac/member.enums";
-import { userService, UserService } from "../../user/service/user.service";
-import { memberService, MemberService } from "../../rbac/service/member.service";
+import { memberNotFoundError } from "../../rbac/rbac.errors";
+import { UserService } from "../../user/service/user.service";
+import { MemberService } from "../../rbac/service/member.service";
+import { inject, injectable } from "tsyringe";
+import { TOKENS } from "../../../lib/di/tokens";
+import { passwordResetEmail } from "../templates/password-reset";
+import { IEmailProvider } from "../../../pkg/email/email.interface";
 
+@injectable()
 export class AuthService {
 
-    constructor(private readonly restaurantService: RestaurantService,
-        private readonly userService: UserService,
-        private readonly memberService: MemberService,
+    constructor(
+        @inject(TOKENS.RestaurantService)private readonly restaurantService: RestaurantService,
+        @inject(TOKENS.UserService)private readonly userService: UserService,
+        @inject(TOKENS.MemberService) private readonly memberService: MemberService,
+        @inject(TOKENS.EmailProvider) private readonly emailProvider: IEmailProvider,
     ){}
 
     register = async (data: RegisterDTO) => {
@@ -78,6 +83,7 @@ export class AuthService {
         const tokens = createAuthTokens(payload);
 
         return {
+            message: "User registered successfully",
             accessToken: tokens.accessToken,
             refreshToken: tokens.refreshToken,
             user: toUserResponse(user),
@@ -87,15 +93,15 @@ export class AuthService {
 
     login = async(data: LoginDTO )=> {
         const user = await findUserByEmail(data.email);
-        if (!user) throw incorrectCredentialsError;
+        if (!user) throw incorrectCredentialsError; //for security, we don't reveal if the email exists or not
         const isMatch = await comparePassword(data.password, user.passwordHash);
-        if (!isMatch) throw incorrectCredentialsError;
+        if (!isMatch) throw incorrectCredentialsError; //for security, we don't reveal if the password is correct or not
 
         let restaurantMemberInfo = null;
         if(user.systemRole == SystemRole.RESTAURANT_USER){
             const memberData = await findRestaurantMemberWithRole(user.id);
             if (!memberData) {
-            throw memberAccountDisabledError; 
+            throw memberNotFoundError; 
         }
             if (memberData) {
                 const branchIds = await findBranchIdsByMemberId(memberData.member.id);
@@ -110,6 +116,7 @@ export class AuthService {
         const payload = {userId: user.id, role: user.systemRole, email: user.email, ...restaurantMemberInfo};
         const tokens = createAuthTokens(payload);
         return {
+            message: "User logged in successfully",
             accessToken: tokens.accessToken,
             refreshToken: tokens.refreshToken,
             user: toUserResponse(user)
@@ -118,7 +125,7 @@ export class AuthService {
 
     forgetPassword = async(data: ForgetPasswordDTO )=> {
         const user = await findUserByEmail(data.email);
-        if (!user) return
+        if (!user) return; // For security, we don't reveal if the email exists
         const otp = generateOTP();
         const hashedOTP = hashOTP(otp);
         await createPasswordReset({
@@ -128,23 +135,26 @@ export class AuthService {
             createdAt: new Date(),
         });
 
-        // TODO: send the OTP to the user's email
-        console.log(`mocked email sent to "${user.email}" with OTP: ${otp}`);
-        
+        const email = passwordResetEmail(otp);
+        await this.emailProvider.send(user.email, email.subject, email.html);        
     }
 
-    resetPassword = async(data: ResetPasswordDTO) =>{
+    resetPassword = async (data: ResetPasswordDTO) => {
+        
         const user = await findUserByEmail(data.email);
         if (!user) throw InvalidOTPError;
+
         const reset = await findLatestPasswordResetByUserId(user.id);
         if (!reset) throw InvalidOTPError;
+
         const inputOTPHash = hashOTP(data.otp);
-        if(inputOTPHash != reset.otpHash || reset.isExpired()){
-            throw InvalidOTPError;
-        }
+        if (inputOTPHash != reset.otpHash || reset.isExpired()) throw InvalidOTPError;
+        
         const newHashPassowrd = await hashPassword(data.newPassword);
+
         await updateUserPassword(user.id, newHashPassowrd);
         await updatePasswordResetConsumedAt(reset.id);
+        
         return user;
     }
 
@@ -160,5 +170,3 @@ export class AuthService {
         await activateMemberByUserId(user.id);
     }
 }
-
-export const authService = new AuthService(restaurantService, userService, memberService);

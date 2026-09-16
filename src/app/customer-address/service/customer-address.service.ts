@@ -2,6 +2,7 @@ import { CustomerAddress } from "../entity/customer-address.entity";
 import { findAddressesByUserId, createAddress, findAddressByIdAndUserId, updateAddress, deleteAddress, clearDefaultByUserId, findAddressById } from "../repository/customer-address.repo";
 import { createAddressDTO, UpdateAddressDTO } from "../dto/customer-address.dto";
 import { addressNotFoundError } from "../customer-address.errors";
+import { injectable } from "tsyringe";
 
 function toResponse(address: any) {
     return {
@@ -18,8 +19,9 @@ function toResponse(address: any) {
         isDefault: address.isDefault,
     };
 }
-
+@injectable()
 export class CustomerAddressService{
+    
     getByUserId = async (userId: number): Promise<CustomerAddress[]> => {
         return findAddressesByUserId(userId);
     }
@@ -49,5 +51,3 @@ export class CustomerAddressService{
         await deleteAddress(addressId, userId);
     }
 }
-
-export const customerAddressService = new CustomerAddressService()

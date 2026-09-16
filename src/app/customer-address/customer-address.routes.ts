@@ -1,10 +1,14 @@
 import { Router } from "express";
-import { customerAddressController } from "./controller/customer-address.controller";
-import { authnetcation } from "../../lib/auth/guard"
+import { CustomerAddressController } from "./controller/customer-address.controller";
+import { authentication } from "../../lib/auth/guard"
+import { container } from "../../lib/di/container";
+import { TOKENS } from "../../lib/di/tokens";
+
+const customerAddressController = container.resolve<CustomerAddressController>(TOKENS.CustomerAddressController);
 
 export const addressRouter: Router = Router();
 
-addressRouter.get("/", authnetcation, customerAddressController.getAll)
-addressRouter.post("/", authnetcation, customerAddressController.createAddress)
-addressRouter.patch("/:addressId", authnetcation, customerAddressController.updateAddress);
-addressRouter.delete("/:addressId", authnetcation, customerAddressController.removeAddress);
+addressRouter.get("/", authentication, customerAddressController.getAll)
+addressRouter.post("/", authentication, customerAddressController.createAddress)
+addressRouter.patch("/:addressId", authentication, customerAddressController.updateAddress);
+addressRouter.delete("/:addressId", authentication, customerAddressController.removeAddress);

@@ -2,7 +2,7 @@ import { env } from "../config/env";
 import type { Knex } from "knex";
 
 const config: Knex.Config = {
-    client: "pg",
+    client: "pg", // this is the database client, in this case
     connection: {
         host: env.db.host,
         port: env.db.port,
@@ -11,7 +11,7 @@ const config: Knex.Config = {
         database: env.db.name,
     },
 
-    pool: { min: 0, max: env.db.poolMax },
+    pool: { min: env.db.poolMin, max: env.db.poolMax },
 
     migrations: {
         directory: env.db.migrationDirectory,

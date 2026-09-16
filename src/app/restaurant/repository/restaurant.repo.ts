@@ -2,7 +2,7 @@ import { Knex } from "knex";
 import { db } from "../../../lib/knex/knex";
 import { Restaurant } from "../entity/restaurant.entity"
 import { RestaurantStatus } from "../entity/enums";
-import { date } from "zod";
+import { applyCursorPagination, applyFilters, FilterParams, PaginationParams } from "../../../lib/http/pagination/cursor-pagination";
 
 const RESTAURANT_COLUMNS = [
     "id",
@@ -35,8 +35,11 @@ function toEntity(row: any){
 //                                  FIND Restaurant METHODS
 //========================================================================================
 
-export async function findAllRestaurants(): Promise<Restaurant[]> {
-    const rows = await db("restaurants").select(RESTAURANT_COLUMNS);
+export async function findAllRestaurants(paginationParams: PaginationParams, filtersParams: FilterParams[]): Promise<Restaurant[]> {
+    let query = db("restaurants").select(RESTAURANT_COLUMNS);
+    query = applyCursorPagination(query, paginationParams);
+    query = applyFilters(query, filtersParams);
+    const rows = await query;
     return rows.map(toEntity)
 }   
 

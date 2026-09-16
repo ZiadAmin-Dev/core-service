@@ -1,8 +1,9 @@
 import { getPermissionsByRoleName } from "../repository/permissions.repo";
 import { InMemoryCacheService } from "../../../lib/cache/cache.service";
+import { injectable } from "tsyringe";
 
-
-class PermissionCacheService{
+@injectable()
+export class PermissionCacheService {
 
     private cacheService = new InMemoryCacheService(1)
 
@@ -28,5 +29,3 @@ class PermissionCacheService{
         else this.cacheService.clearAll();
     }
 }
-
-export const permissionCacheService = new PermissionCacheService();

@@ -1,12 +1,16 @@
-import { RestaurantService, restaurantService } from "../service/restaurant.service";
+import { RestaurantService } from "../service/restaurant.service";
 import { validateBody } from "../../../lib/validation/validate";
 import { Request, Response, NextFunction } from "express";
 import { CreateRestaurantDTO, UpdateRestaurantDTO, UpdateRestaurantStatusDTO } from "../dto/restaurant.dto";
 import { SystemRole } from "../../user/user.enums";
+import { TOKENS } from "../../../lib/di/tokens";
+import { injectable, inject } from "tsyringe";
+import { parseFilters, parsePaginationQuery } from "../../../lib/http/pagination/parse-query";
+import { sendPaginated, sendSuccess } from "../../../lib/http/response";
 
-
+@injectable()
 export class RestaurantController {
-    constructor(private readonly restaurantService:RestaurantService){}
+    constructor(@inject(TOKENS.RestaurantService) private readonly restaurantService: RestaurantService) {}
 
     create = async(req: Request, res: Response, next: NextFunction) => {
         try {
@@ -21,14 +25,16 @@ export class RestaurantController {
     getById = async (req: Request, res: Response, next: NextFunction) => {
         try{
             const result = await this.restaurantService.findById(Number(req.params.restaurantId))
-            res.status(200).json({data: result});
+            sendSuccess(res, result);
         }catch (err) { next(err); }
     }
 
     getAll = async(req: Request, res: Response, next: NextFunction) => {
-        try{
-            const result = await this.restaurantService.findAll();
-            res.status(200).json({data: result});
+        try {
+            const paginationParams = parsePaginationQuery(req.query, ['createdAt', 'name', 'status']);
+            const filtersParams = parseFilters(req.query, ['id', 'status', 'name']);
+            const result = await this.restaurantService.findAll(paginationParams, filtersParams);
+            sendPaginated(res, result.data, result.meta)
         }catch (err) { next(err); }
     }
 
@@ -55,5 +61,3 @@ export class RestaurantController {
         } catch (err) { next(err); }
     };
 }
-
-export const restaurantController = new RestaurantController(restaurantService)

@@ -3,7 +3,7 @@ import { env } from "../../lib/config/env";
 import jwt, { SignOptions } from "jsonwebtoken";
 import crypto from "crypto";
 import { Response } from "express";
-import { toMs } from "../../lib/utils/time";
+import { toMs } from "../../pkg/utils/time";
 
 export interface JwtPayload {
     userId: number;
@@ -16,13 +16,13 @@ export interface JwtPayload {
 }
 
 export function createAccessToken(payload: JwtPayload) : string {
-    const options : SignOptions = {expiresIn: Number(env.jwt.accessExpiresIn)}
-    return jwt.sign(payload,env.jwt.accessSecret, options);
+    const options: SignOptions = { expiresIn: env.jwt.accessExpiresIn };
+    return jwt.sign(payload, env.jwt.accessSecret, options);
 }
 
 export function createRefreshToken(payload: JwtPayload) : string {
-    const options : SignOptions = {expiresIn: Number(env.jwt.refreshExpiresIn)}
-    return jwt.sign(payload,env.jwt.refreshSecret, options);
+    const options : SignOptions = {expiresIn: env.jwt.refreshExpiresIn}
+    return jwt.sign(payload, env.jwt.refreshSecret, options);
 }
 
 export function createAuthTokens(payload: JwtPayload) {
@@ -66,17 +66,19 @@ export function verifyRefreshToken(token: string): JwtPayload{
 
 export function setAuthCookies(res: Response, accessToken: string, refreshToken: string) {
     
-    const secure = env.NODE_ENV === "production";
+    const secure = env.isProduction;
 
     res.cookie("access_token", accessToken, {
         httpOnly: true,
         secure: secure,
+        sameSite: 'lax', // for CSRF exploid //TODO: study it more
         maxAge: toMs(1, 'h'),
     });
 
     res.cookie("refresh_token", refreshToken, {
         httpOnly: true,
         secure: secure,
+        sameSite: 'lax',
         maxAge: toMs(7,'d'),
         path: "/api/auth/refresh",
     });
@@ -84,11 +86,12 @@ export function setAuthCookies(res: Response, accessToken: string, refreshToken:
 
 export function setAccessTokenCookies(res: Response, accessToken: string) {
     
-    const secure = env.NODE_ENV === "production";
+    const secure = env.isProduction;
 
     res.cookie("access_token", accessToken, {
         httpOnly: true,
         secure: secure,
+        sameSite: 'lax',
         maxAge: toMs(1, 'h'),
     });
 }

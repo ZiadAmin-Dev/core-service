@@ -8,6 +8,7 @@ import { Knex } from "knex";
 import {User} from "../entity/user.entity";
 import { userAlreadyExistsError } from "../../auth/auth.errors";
 import { hashPassword } from "../../auth/auth.utils";
+import { injectable } from "tsyringe";
 
 export interface CreateUserData {
     email: string;
@@ -17,6 +18,7 @@ export interface CreateUserData {
     systemRole: SystemRole;
 }
 
+@injectable()
 export class UserService{
     
     create = async (data: CreateUserData, trx?: Knex | Knex.Transaction) => {
@@ -53,5 +55,3 @@ export class UserService{
         return toUserResponse(updated);
     }
 }
-
-export const userService = new UserService()

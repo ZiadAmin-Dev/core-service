@@ -1,4 +1,4 @@
-import {MemberStatus} from "../member.enums";
+import {MemberStatus} from "./memberStatus.enums";
 
 export class RestaurantMember{
     id: number;

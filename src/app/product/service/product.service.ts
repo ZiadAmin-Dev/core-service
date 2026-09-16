@@ -1,5 +1,4 @@
 import { notAuthorisedError } from "../../../lib/auth/errors";
-import { Restaurant } from "../../restaurant/entity/restaurant.entity";
 import { findRestaurantById } from "../../restaurant/repository/restaurant.repo";
 import { restaurantNotFoundError } from "../../restaurant/resraurant.errors";
 import { SystemRole } from "../../user/user.enums";
@@ -11,9 +10,10 @@ import { createProduct, findProductById, findProductsByBranch, findProductsByRes
 import { db } from "../../../lib/knex/knex";
 import { findBranchById } from "../../branch/repository/branch.repo";
 import { branchNotFoundError } from "../../branch/branch.errors";
+import { injectable } from "tsyringe";
 
 
-
+@injectable()
 export class ProductService{
     
     findCategories = async (restaurantId: number) => {
@@ -40,6 +40,7 @@ export class ProductService{
     create = async (restaurantId: number, userId: number, userRole: SystemRole, data: CreateProductDTO) => {
         const restaurant = await findRestaurantById(restaurantId);
         if (!restaurant) throw restaurantNotFoundError;
+        
         if (userRole !== SystemRole.SYSTEM_ADMIN && Number(restaurant.ownerId) !== Number(userId)) throw notAuthorisedError;
 
         return await db.transaction(async (trx) => {
@@ -110,4 +111,3 @@ export class ProductService{
         }
     }
 }
-export const productService = new ProductService();

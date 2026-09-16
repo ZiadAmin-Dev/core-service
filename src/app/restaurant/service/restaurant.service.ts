@@ -8,13 +8,17 @@ import { CreateRestaurantDTO, UpdateRestaurantDTO } from "../dto/restaurant.dto"
 import { SystemRole } from "../../user/user.enums";
 import { notAuthorisedError } from "../../../lib/auth/errors";
 import { db } from "../../../lib/knex/knex";
-import { UserService, userService } from "../../user/service/user.service";
-import { memberService, MemberService } from "../../rbac/service/member.service";
+import { UserService } from "../../user/service/user.service";
+import { MemberService } from "../../rbac/service/member.service";
+import { injectable, inject } from "tsyringe";
+import { TOKENS } from "../../../lib/di/tokens";
+import { buildPaginationResult, FilterParams, PaginationParams } from "../../../lib/http/pagination/cursor-pagination";
 
-
+@injectable()
 export class RestaurantService {
-    constructor(private readonly userService: UserService,
-        private readonly memberService: MemberService,
+    constructor(
+        @inject(TOKENS.UserService) private readonly userService: UserService,
+        @inject(TOKENS.MemberService) private readonly memberService: MemberService,
     ) { }
 
     createWithOwner = async (userRole: SystemRole, data: CreateRestaurantDTO) => {
@@ -71,7 +75,10 @@ export class RestaurantService {
         return restaurant;
     }
 
-    findAll = () => findAllRestaurants();
+    findAll = async (paginationParams: PaginationParams, filtersParams: FilterParams[]) => {
+        const result = await findAllRestaurants(paginationParams, filtersParams);
+        return buildPaginationResult(result, paginationParams.limit, paginationParams.sortBy);
+    }
 
     findActive = () => findRestaurantsByStatus(RestaurantStatus.ACTIVE);
 
@@ -115,5 +122,3 @@ export class RestaurantService {
         return updateRestaurantStatus(id, status);
     };
 }
-
-export const restaurantService = new RestaurantService(userService, memberService)

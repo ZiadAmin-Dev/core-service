@@ -1,13 +1,13 @@
+import { injectable } from "tsyringe";
 import { notAuthorisedError } from "../../../lib/auth/errors";
 import { findRestaurantById } from "../../restaurant/repository/restaurant.repo";
 import { restaurantNotFoundError } from "../../restaurant/resraurant.errors";
 import { SystemRole } from "../../user/user.enums";
 import { branchNotFoundError } from "../branch.errors";
 import { CreateBranchDTO, UpdateBranchDTO, UpdateBranchStatusDTO } from "../dto/branch.dto";
-import { Branch } from "../entity/branch.entity";
 import { createBranch, findActiveBranchesByRestaurantId, findBranchById, findBranchesByRestaurantId, findNearbyBranches, updateBranch, updateBranchStatus } from "../repository/branch.repo"
 
-
+@injectable()
 export class BranchService{
 
     findNearby = async (lat: number, lng: number) => {
@@ -54,13 +54,11 @@ export class BranchService{
     }
 
     updateStatus = async (id: number, userRole: SystemRole, data: UpdateBranchStatusDTO) => {
-    if (userRole !== SystemRole.SYSTEM_ADMIN) throw notAuthorisedError;
+        if (userRole !== SystemRole.SYSTEM_ADMIN) throw notAuthorisedError;
 
-    const branch = await findBranchById(id);
-    if (!branch) throw branchNotFoundError;
+        const branch = await findBranchById(id);
+        if (!branch) throw branchNotFoundError;
 
-    return updateBranchStatus(id, data);
-};
+        return updateBranchStatus(id, data);
+    };
 }
-
-export const branchService = new BranchService()

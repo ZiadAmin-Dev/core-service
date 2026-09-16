@@ -1,25 +1,33 @@
 import { Knex } from "knex";
 import { db } from "../../../lib/knex/knex";
-import { toMs } from "../../../lib/utils/time";
-import { toUserResponse } from "../../../lib/utils/utils";
+import { toMs } from "../../../pkg/utils/time";
 import { userAlreadyExistsError } from "../../auth/auth.errors";
 import { generateOTP, hashOTP } from "../../auth/auth.utils";
 import { createPasswordReset } from "../../auth/repository/password-reset.repo";
-import { createUser, findUserExistsByEmail, findUserExistsByEmailOrPhone, findUserExistsByPhone } from "../../user/repository/users.repo";
-import { userService, UserService } from "../../user/service/user.service";
+import { findUserExistsByEmailOrPhone, findUserExistsByPhone } from "../../user/repository/users.repo";
+import { UserService } from "../../user/service/user.service";
 import { SystemRole } from "../../user/user.enums";
 import { CreateMemberDTO, UpdateMemberBranchesDTO, UpdateMemberDTO } from "../dto/member.dto";
 import { MemberBranch } from "../entity/member-branch.entity";
-import { MemberStatus } from "../member.enums";
+import { MemberStatus } from "../entity/memberStatus.enums";
 import { cannotAssignBranchesToOwners, cannotCreateOwnerMember, cannotDeleteOwnerError, invalidBranchIdsError, memberNotFoundError, roleNotFoundError } from "../rbac.errors";
 import { countBranchesByIdsAndRestaurant, setMemberBranches } from "../repository/member-branch.repo";
 import { getPermissionsDetailsByRoleName } from "../repository/permissions.repo";
 import { createRestaurantMember, deleteMember, findMembersByRestaurantId, findMemberWithRoleName, updateMember } from "../repository/restaurant-member.repo";
 import { findRoleByName } from "../repository/role.repo";
 import { RestaurantMember } from "../entity/restaurant-member.entity";
+import { injectable, inject } from "tsyringe";
+import { TOKENS } from "../../../lib/di/tokens";
+import { memberInvitationEmail } from "../templates/member-invitation";
+import { IEmailProvider } from "../../../pkg/email/email.interface";
 
+
+@injectable()
 export class MemberService {
-    constructor(private readonly userService: UserService) {}
+    constructor(
+        @inject(TOKENS.UserService) private readonly userService: UserService,
+        @inject(TOKENS.EmailProvider) private readonly emailProvider: IEmailProvider
+    ) { }
 
     async createOwnerMember(restaurantId: number, userId: number, trx?: Knex.Transaction): Promise<RestaurantMember> {
         const ownerRoleId = await findRoleByName('owner', trx);
@@ -87,8 +95,8 @@ export class MemberService {
                 }, trx
             )
 
-            // TODO: send email
-            console.log(`mocked email sent to "${user.email}" with OTP: ${otp}`);
+            const email = memberInvitationEmail(otp, data.role);
+            await this.emailProvider.send(data.email, email.subject, email.html);
 
             return {
                 message: "Member invited successfully",
@@ -158,11 +166,10 @@ export class MemberService {
         // validate branchIds belong to this restaurant (single COUNT query)
         await this.validateBranchOwnership(data.branchIds, restaurantId);
 
-        const now = new Date();
         const rows = data.branchIds.map(branchId => new MemberBranch({
             branchId,
             memberId: result.member.id,
-            createdAt: now,
+            createdAt: new Date(),
         }));
         await setMemberBranches(memberId, rows);
 
@@ -172,7 +179,6 @@ export class MemberService {
         };
     }
 
-    
     async getRolePermissions(roleName: string) {
         const role = await findRoleByName(roleName);
         if (!role) throw roleNotFoundError;
@@ -188,7 +194,4 @@ export class MemberService {
             throw invalidBranchIdsError;
         }
     }
-
 }
-
-export const memberService = new MemberService(userService);

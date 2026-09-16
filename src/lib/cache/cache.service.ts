@@ -1,4 +1,4 @@
-import { toMs } from "../utils/time";
+import { toMs } from "../../pkg/utils/time";
 
 interface CacheEntry<T> {
     data: T;
