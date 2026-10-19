@@ -37,11 +37,11 @@ function toEntity(row: any){
 
 export async function findAllRestaurants(paginationParams: PaginationParams, filtersParams: FilterParams[]): Promise<Restaurant[]> {
     let query = db("restaurants").select(RESTAURANT_COLUMNS);
-    query = applyCursorPagination(query, paginationParams);
     query = applyFilters(query, filtersParams);
+    query = applyCursorPagination(query, paginationParams);
     const rows = await query;
     return rows.map(toEntity)
-}   
+}
 
 export async function findRestaurantById(id: number): Promise<Restaurant | undefined> {
     const row = await db("restaurants").select(RESTAURANT_COLUMNS).where("id", id).first();

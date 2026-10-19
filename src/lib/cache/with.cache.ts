@@ -14,7 +14,7 @@ export function withCache(ttl = toSec(1, 'h'), userScoped = false) {
             if (userScoped) {
                 key = `${key}:${req.user?.userId}`;
             }
-
+            
             const cached = await cacheProvider.get(key);
 
             if (cached) {
@@ -32,12 +32,18 @@ export function withCache(ttl = toSec(1, 'h'), userScoped = false) {
 
             res.json = ((body: any) => {
                 if (res.statusCode >= 200 && res.statusCode < 300) {
-                    // نضمن إننا بنخزن String صريح
                     const valueToCache = typeof body === 'string' ? body : JSON.stringify(body);
-                    
-                    // ⚡ إرسال للـ Cache في الـ Background من غير ما يعطل الـ Response
                     cacheProvider.set(key, valueToCache, ttl).catch(err => {
                         console.error("Cache set error:", err);
+                    });
+                }
+                
+                else if (res.statusCode === 404) {
+                    // ⚡ If the response is 404, we can cache it for a shorter duration to avoid repeated DB hits for non-existent resources.
+                    const valueToCache = typeof body === 'string' ? body : JSON.stringify(body);
+                    const NEGATIVE_TTL = toSec(5, 'm'); // Cache 404 for 5 minutes
+                    cacheProvider.set(key, valueToCache, NEGATIVE_TTL).catch(err => {
+                        console.error("Cache set error for 404 response:", err);
                     });
                 }
                 return originalJson(body);
@@ -46,7 +52,9 @@ export function withCache(ttl = toSec(1, 'h'), userScoped = false) {
             next();
         }
         catch (err) {
-            next(err);
+            // ⚡ If any unexpected error occurs in the cache layer, proceed to the Controller anyway and do not block the request!
+            console.error("Cache Middleware unexpected error, skipping cache:", err);
+            next(); // Pass without err so it moves directly to the Controller!
         }
     }
 }

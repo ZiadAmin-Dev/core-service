@@ -3,12 +3,17 @@ import { CustomerAddressController } from "./controller/customer-address.control
 import { authentication } from "../../lib/auth/guard"
 import { container } from "../../lib/di/container";
 import { TOKENS } from "../../lib/di/tokens";
+import { requireInternalApiKey } from "../../lib/auth/api-key";
+    
 
 const customerAddressController = container.resolve<CustomerAddressController>(TOKENS.CustomerAddressController);
 
-export const addressRouter: Router = Router();
+export const customerAddressRouter = Router();
 
-addressRouter.get("/", authentication, customerAddressController.getAll)
-addressRouter.post("/", authentication, customerAddressController.createAddress)
-addressRouter.patch("/:addressId", authentication, customerAddressController.updateAddress);
-addressRouter.delete("/:addressId", authentication, customerAddressController.removeAddress);
+customerAddressRouter.get("/", authentication, customerAddressController.getAll)
+customerAddressRouter.post("/", authentication, customerAddressController.create)
+customerAddressRouter.patch("/:addressId", authentication, customerAddressController.update);
+customerAddressRouter.delete("/:addressId", authentication, customerAddressController.remove);
+
+// Internal (service-to-service)
+customerAddressRouter.get('/internal/:id', requireInternalApiKey, customerAddressController.getById);

@@ -8,7 +8,6 @@ export interface APIResponse <T = unknown> {
 }
 
 
-
 export function sendSuccess <T>(res: Response, data: T, statusCode: number = 200, meta?: Object) {
     const body: APIResponse<T> = { success: true, data: data };
     if (meta) body.meta = meta;

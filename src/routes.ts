@@ -2,7 +2,7 @@ import { Router } from "express";
 import { healthRouter } from "./app/health/health.routes";
 import { authRouter } from "./app/auth/auth.routes";
 import { userRouter } from "./app/user/user.routes";
-import { addressRouter } from "./app/customer-address/customer-address.routes";
+import { customerAddressRouter } from "./app/customer-address/customer-address.routes";
 import { restaurantRouter } from "./app/restaurant/restaurant.routes";
 import { branchRouter } from "./app/branch/branch.routes";
 import { productRouter } from "./app/product/product.routes";
@@ -20,7 +20,7 @@ routes.use("/auth", authRouter);
 routes.use("/user", userRouter);
 
 //address route
-routes.use("/customer/addresses", addressRouter);
+routes.use("/customer/addresses", customerAddressRouter);
 
 //restaurant route
 routes.use("/restaurants", restaurantRouter);

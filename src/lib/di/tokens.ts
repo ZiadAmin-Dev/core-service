@@ -22,4 +22,5 @@ export const TOKENS = {
     Logger: Symbol.for("Logger"),
     CacheProvider: Symbol.for("CacheProvider"),
     EmailProvider: Symbol.for("EmailProvider"),
-}
+    MessageBroker: Symbol.for("MessageBroker"),
+} as const;

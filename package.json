@@ -4,10 +4,16 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "vitest run",
     "build": "tsc",
     "dev": "tsx watch src/server",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "worker:dev": "tsx watch src/worker",
+    "worker": "node dist/worker.js",
+    "migrate": "knex --knexfile src/lib/knex/knexfile.ts migrate:latest",
+    "migrate:rollback": "knex --knexfile src/lib/knex/knexfile.ts migrate:rollback",
+    "migrate:status": "knex --knexfile src/lib/knex/knexfile.ts migrate:status",
+    "migrate:make": "knex --knexfile src/lib/knex/knexfile.ts migrate:make"
   },
   "repository": {
     "type": "git",
@@ -24,11 +30,14 @@
     "@types/cors": "^2.8.19",
     "@types/helmet": "^0.0.48",
     "@types/ioredis": "^4.28.10",
+    "amqp-connection-manager": "^5.0.0",
+    "amqplib": "^2.2.0",
     "bcrypt": "^6.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
+    "croner": "^10.0.1",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "helmet": "^8.3.0",
@@ -39,9 +48,11 @@
     "pg": "^8.22.0",
     "reflect-metadata": "^0.2.2",
     "tsyringe": "^4.10.0",
+    "uuid": "^14.0.3",
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@types/amqplib": "^0.10.8",
     "@types/bcrypt": "^6.0.0",
     "@types/cookie-parser": "^1.4.10",
     "@types/express": "^5.0.6",
@@ -51,6 +62,7 @@
     "prettier": "^3.9.6",
     "ts-node": "^10.9.2",
     "tsx": "^4.23.1",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.4"
   }
 }

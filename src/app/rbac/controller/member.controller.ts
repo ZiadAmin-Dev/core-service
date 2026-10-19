@@ -1,9 +1,11 @@
 import {NextFunction, Response, Request} from "express";
 import {validateBody} from "../../../lib/validation/validate";
-import {CreateMemberDTO, UpdateMemberBranchesDTO, UpdateMemberDTO} from "../dto/member.dto";
+import {CreateMemberDTO, UpdateMemberBranchesDTO, UpdateMemberDTO} from "../dto/member.request.dto";
 import { inject, injectable } from "tsyringe";
 import { MemberService } from "../service/member.service";
 import { TOKENS } from "../../../lib/di/tokens";
+import { sendSuccess } from "../../../lib/http/response";
+import { roleQueryRequiredError } from "../rbac.errors";
 
 @injectable()
 export class MemberController {
@@ -77,6 +79,18 @@ export class MemberController {
         try {
             const result = await this.memberService.getRolePermissions(req.params.role as string);
             res.status(200).send({ result });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+
+    getPermissionsByRole = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const role = String(req.query.role ?? "");
+            if (!role) throw roleQueryRequiredError;
+            const result = await this.memberService.getPermissionsByRole(role);
+            sendSuccess(res, result);
         }
         catch (error) {
             next(error);

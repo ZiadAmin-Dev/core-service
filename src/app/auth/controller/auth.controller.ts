@@ -1,4 +1,4 @@
-import { RegisterDTO, LoginDTO, ForgetPasswordDTO, ResetPasswordDTO } from "../dto/auth.dto";
+import { RegisterDTO, LoginDTO, ForgetPasswordDTO, ResetPasswordDTO } from "../dto/auth.request.dto";
 import { AuthService } from "../service/auth.service";
 import { Request, Response, NextFunction } from "express";
 import { validateBody } from "../../../lib/validation/validate";

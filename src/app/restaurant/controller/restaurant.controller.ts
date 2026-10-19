@@ -1,11 +1,11 @@
 import { RestaurantService } from "../service/restaurant.service";
-import { validateBody } from "../../../lib/validation/validate";
+import { validateBody, validateQuery } from "../../../lib/validation/validate";
 import { Request, Response, NextFunction } from "express";
-import { CreateRestaurantDTO, UpdateRestaurantDTO, UpdateRestaurantStatusDTO } from "../dto/restaurant.dto";
+import { CreateRestaurantDTO, UpdateRestaurantDTO, UpdateRestaurantStatusDTO } from "../dto/restaurant.request.dto";
+import { ListRestaurantsQueryDTO } from "../dto/restaurant.query.dto";
 import { SystemRole } from "../../user/user.enums";
 import { TOKENS } from "../../../lib/di/tokens";
 import { injectable, inject } from "tsyringe";
-import { parseFilters, parsePaginationQuery } from "../../../lib/http/pagination/parse-query";
 import { sendPaginated, sendSuccess } from "../../../lib/http/response";
 
 @injectable()
@@ -31,9 +31,10 @@ export class RestaurantController {
 
     getAll = async(req: Request, res: Response, next: NextFunction) => {
         try {
-            const paginationParams = parsePaginationQuery(req.query, ['createdAt', 'name', 'status']);
-            const filtersParams = parseFilters(req.query, ['id', 'status', 'name']);
-            const result = await this.restaurantService.findAll(paginationParams, filtersParams);
+            // Gatekeeper: parse, cast ("25" -> 25, "1,2,3" -> [1, 2, 3]) and
+            // validate all query params. Throws 400 on any invalid input.
+            const query = await validateQuery(ListRestaurantsQueryDTO, req.query);
+            const result = await this.restaurantService.findAll(query.toPaginationParams(), query.toFilterParams());
             sendPaginated(res, result.data, result.meta)
         }catch (err) { next(err); }
     }

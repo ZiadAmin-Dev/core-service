@@ -1,6 +1,6 @@
 import { createUser as createUserRepo, findUserById, findUserExistsByEmailOrPhone, findUserExistsByPhone } from "../../user/repository/users.repo";
 import { userNotFoundError, phoneAlreadyInUse } from "../user.errors"
-import { UpdateUserDTO } from "../dto/user.dto"
+import { UpdateUserDTO } from "../dto/user.request.dto"
 import { updateUserProfile } from "../repository/users.repo"
 import { toUserResponse } from "../../../lib/utils/utils";
 import { SystemRole } from "../user.enums";
@@ -53,5 +53,15 @@ export class UserService{
             if (newPhoneExisting) throw phoneAlreadyInUse; }
         const updated = await updateUserProfile(userId, data)
         return toUserResponse(updated);
+    }
+
+    getAgentById = async (id: number) => {
+        const user = await findUserById(id);
+        if (!user) throw userNotFoundError;
+        if (user.systemRole !== SystemRole.DELIVERY_AGENT) {
+            // Use userNotFoundError to avoid enumeration of other user types.
+            throw userNotFoundError;
+        }
+        return {id: user.id, name: user.name, phone: user.phone};
     }
 }

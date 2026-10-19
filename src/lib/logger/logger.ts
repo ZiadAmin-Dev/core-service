@@ -1,15 +1,6 @@
 type LogLevel = 'info' | 'error' | 'warn' | 'debug';
 
 export class Logger {
-    private static instance: Logger;
-
-    constructor() {
-        if(!Logger.instance) {
-            Logger.instance = this;
-        }
-        return Logger.instance;
-    }
-
     log(level: LogLevel, message: string, metadata: Record<string, unknown> = {}) {
         const logObject = {
             level: level,

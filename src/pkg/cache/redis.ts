@@ -23,6 +23,14 @@ export class RedisCacheProvider implements ICacheProvider {
         this.client.connect().catch((err) => { console.error("Redis connection error:", err); });
     }
 
+    private applyJitter(ttlSeconds: number, jitterPercentage = 0.10): number {
+        if (ttlSeconds < 10) return ttlSeconds; // Don't apply jitter for very short TTLs
+        
+        const maxJitter = ttlSeconds * jitterPercentage; // Calculate the maximum jitter based on the percentage
+        const jitter = Math.random() * maxJitter * 2 - maxJitter; // Generate a random jitter value between -maxJitter and +maxJitter
+        return Math.max(1, ttlSeconds + Math.round(jitter)); // Ensure the TTL doesn't go below 1 second
+    }
+
     async get(key: string): Promise<any> {
         const value = await this.client.get(key);
 
@@ -39,7 +47,8 @@ export class RedisCacheProvider implements ICacheProvider {
                 : JSON.stringify(value);
 
         if (ttlSeconds) {
-            await this.client.set(key, serializedValue, "EX", ttlSeconds);
+            const jitteredTTL = this.applyJitter(ttlSeconds);
+            await this.client.set(key, serializedValue, "EX", jitteredTTL);
         } else {
             await this.client.set(key, serializedValue);
         }

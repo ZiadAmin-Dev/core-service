@@ -14,3 +14,5 @@ export const roleNotFoundError = new AppError("Role not found", 404); //not foun
 
 // permissons Errors
 export const permissonsNotFoundError = new AppError("Role not found", 404); //not found
+
+export const roleQueryRequiredError = new AppError("Missing role query parameter", 400); //bad request

@@ -1,6 +1,6 @@
 import { CustomerAddress } from "../entity/customer-address.entity";
 import { findAddressesByUserId, createAddress, findAddressByIdAndUserId, updateAddress, deleteAddress, clearDefaultByUserId, findAddressById } from "../repository/customer-address.repo";
-import { createAddressDTO, UpdateAddressDTO } from "../dto/customer-address.dto";
+import { createAddressDTO, UpdateAddressDTO } from "../dto/customer-address.request.dto";
 import { addressNotFoundError } from "../customer-address.errors";
 import { injectable } from "tsyringe";
 
@@ -24,6 +24,23 @@ export class CustomerAddressService{
     
     getByUserId = async (userId: number): Promise<CustomerAddress[]> => {
         return findAddressesByUserId(userId);
+    }
+
+    getById = async (id: number) => {
+        const address = await findAddressById(id);
+        if (!address) throw addressNotFoundError;
+        return {
+            id: address.id,
+            userId: address.userId,
+            label: address.label,
+            country: address.country,
+            city: address.city,
+            street: address.street,
+            building: address.building,
+            apartmentNumber: address.apartmentNumber,
+            lat: address.lat,
+            lng: address.lng,
+        };
     }
     
     create = async (data: createAddressDTO, userId: number) => {

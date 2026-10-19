@@ -1,10 +1,12 @@
 import { BranchService } from "../service/branch.service";
 import { validateBody } from "../../../lib/validation/validate";
 import { Request, Response, NextFunction } from "express";
-import { CreateBranchDTO, UpdateBranchDTO, UpdateBranchStatusDTO } from "../dto/branch.dto";
+import { CreateBranchDTO, UpdateBranchDTO, UpdateBranchStatusDTO } from "../dto/branch.request.dto";
 import { SystemRole } from "../../user/user.enums";
 import { inject, injectable } from "tsyringe";
 import { TOKENS } from "../../../lib/di/tokens";
+import { sendSuccess } from "../../../lib/http/response";
+import { branchNotFoundError } from "../branch.errors";
 
 @injectable()
 export class BranchController{
@@ -63,4 +65,31 @@ export class BranchController{
             });
         } catch (err) { next(err); }
     };
+
+        findByIdWithRestaurant = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const id = Number(req.params.id);
+            const result = await this.branchService.findByIdWithRestaurant(id);
+            if (!result) throw branchNotFoundError;
+            const {branch, restaurantStatus} = result;
+            sendSuccess(res, {
+                id: branch.id,
+                restaurantId: branch.restaurantId,
+                restaurantStatus,
+                region: branch.countryCode,
+                isActive: branch.isActive,
+                acceptOrders: branch.acceptOrders,
+                deliveryFee: branch.deliveryFee,
+                commissionBps: branch.commission,
+                currency: branch.currency,
+                lat: Number(branch.lat),
+                lng: Number(branch.lng),
+                name: branch.label,
+                addressText: branch.addressText,
+            });
+        } catch (err) {
+            next(err);
+        }
+    }
+
 }

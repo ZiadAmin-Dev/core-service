@@ -1,10 +1,12 @@
 import {Request, Response, NextFunction} from "express";
 import {validateBody} from "../../../lib/validation/validate";
 import {SystemRole} from "../../user/user.enums";
-import {CreateProductDTO, UpdateProductDTO} from "../dto/product.dto";
+import {CreateProductDTO, UpdateProductDTO} from "../dto/product.request.dto";
 import {ProductService} from "../service/product.service";
 import { inject, injectable } from "tsyringe";
 import { TOKENS } from "../../../lib/di/tokens";
+import { sendSuccess } from "../../../lib/http/response";
+import { invalidReserveItemsError, missingProductIdsQueryError } from "../product.errors";
 
 @injectable()
 export class ProductController {
@@ -12,6 +14,10 @@ export class ProductController {
 
     findCategories = async (req: Request, res: Response, next: NextFunction) => {
         try {
+            //TODO: study that you must do ValidateParams and ValidateQueryParams Middlewares to validate params and query params, but for now we will do it here
+            // if(!req.params.restaurantId || isNaN(Number(req.params.restaurantId))) {
+            //     return res.status(400).json({message: "Invalid restaurantId parameter"});
+            // }
             const results = await this.productService.findCategories(Number(req.params.restaurantId));
             res.status(200).json({data: results});
         } catch (err) {
@@ -48,6 +54,19 @@ export class ProductController {
         }
     }
 
+    findByBranchAndIds = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const branchId = Number(req.params.id);
+            const raw = typeof req.query.ids === "string" ? req.query.ids : "";
+            const ids = raw.split(",").map((s) => Number(s.trim())).filter((n) => Number.isInteger(n) && n > 0);
+            if (ids.length === 0) throw missingProductIdsQueryError;
+            const products = await this.productService.findByBranchAndIds(branchId, ids);
+            sendSuccess(res, products);
+        } catch (err) {
+            next(err);
+        }
+    }
+
     create = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const data = await validateBody(CreateProductDTO, req.body);
@@ -75,6 +94,20 @@ export class ProductController {
                 branchId,
             );
             res.status(200).json({message: "Product updated", ...result});
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    reserveStock = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const branchId = Number(req.params.id);
+            const items = req.body?.items;
+            if (!Array.isArray(items) || items.length === 0) {
+                throw invalidReserveItemsError;
+            }
+            const result = await this.productService.reserveStock(branchId, items);
+            sendSuccess(res, result);
         } catch (err) {
             next(err);
         }

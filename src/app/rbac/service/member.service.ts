@@ -7,12 +7,12 @@ import { createPasswordReset } from "../../auth/repository/password-reset.repo";
 import { findUserExistsByEmailOrPhone, findUserExistsByPhone } from "../../user/repository/users.repo";
 import { UserService } from "../../user/service/user.service";
 import { SystemRole } from "../../user/user.enums";
-import { CreateMemberDTO, UpdateMemberBranchesDTO, UpdateMemberDTO } from "../dto/member.dto";
+import { CreateMemberDTO, UpdateMemberBranchesDTO, UpdateMemberDTO } from "../dto/member.request.dto";
 import { MemberBranch } from "../entity/member-branch.entity";
 import { MemberStatus } from "../entity/memberStatus.enums";
 import { cannotAssignBranchesToOwners, cannotCreateOwnerMember, cannotDeleteOwnerError, invalidBranchIdsError, memberNotFoundError, roleNotFoundError } from "../rbac.errors";
 import { countBranchesByIdsAndRestaurant, setMemberBranches } from "../repository/member-branch.repo";
-import { getPermissionsDetailsByRoleName } from "../repository/permissions.repo";
+import { getPermissionsByRoleName, getPermissionsDetailsByRoleName } from "../repository/permissions.repo";
 import { createRestaurantMember, deleteMember, findMembersByRestaurantId, findMemberWithRoleName, updateMember } from "../repository/restaurant-member.repo";
 import { findRoleByName } from "../repository/role.repo";
 import { RestaurantMember } from "../entity/restaurant-member.entity";
@@ -183,6 +183,11 @@ export class MemberService {
         const role = await findRoleByName(roleName);
         if (!role) throw roleNotFoundError;
         const permissions = await getPermissionsDetailsByRoleName(roleName);
+        return {role: roleName, permissions};
+    }
+
+    async getPermissionsByRole(roleName: string) {
+        const permissions = await getPermissionsByRoleName(roleName);
         return {role: roleName, permissions};
     }
 

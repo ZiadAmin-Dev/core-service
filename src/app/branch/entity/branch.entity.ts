@@ -1,4 +1,4 @@
-import { Currency } from "./enums";
+import { Currency } from "./branch.enums";
 
 export class Branch {
     id: number;
@@ -15,6 +15,7 @@ export class Branch {
     createdAt: Date;
     updatedAt: Date;
     deliveryRadius: number;
+    deliveryFee: number; // minor units of currency
     currency: Currency;
     commission: number;
 
@@ -33,6 +34,7 @@ export class Branch {
         this.createdAt = data.createdAt ?? new Date();
         this.updatedAt = data.updatedAt ?? new Date();
         this.deliveryRadius = data.deliveryRadius ?? 0;
+        this.deliveryFee = data.deliveryFee ?? 0;   
         this.currency = data.currency!;
         this.commission = data.commission?? 0;
     }

@@ -4,6 +4,7 @@ import { requireRestaurantMember, rbac } from "../../lib/auth/rbac";
 import { container } from "../../lib/di/container";
 import { MemberController } from "./controller/member.controller";
 import { TOKENS } from "../../lib/di/tokens";
+import { requireInternalApiKey } from "../../lib/auth/api-key";
 
 const memberController = container.resolve<MemberController>(TOKENS.MemberController);
 
@@ -11,6 +12,9 @@ export const rbacRouter = Router();
 
 // GET /roles/:role/permissions — public
 rbacRouter.get('/roles/:role/permissions', memberController.getRolePermissions);
+
+// Internal (service-to-service)
+rbacRouter.get('/internal/rbac/permissions', requireInternalApiKey, memberController.getPermissionsByRole);
 
 // POST /restaurants/:restaurantId/members — create/invite member
 rbacRouter.post('/restaurants/:restaurantId/members', 

@@ -1,10 +1,10 @@
 import { Knex } from "knex";
-import { RegisterRestaurantDTO } from "../../auth/dto/auth.dto";
+import { RegisterRestaurantDTO } from "../../auth/dto/auth.request.dto";
 import { RestaurantStatus } from "../entity/enums";
 import { Restaurant } from "../entity/restaurant.entity";
 import { createRestaurant, findRestaurantsByStatus, findAllRestaurants, findRestaurantById, updateRestaurant, updateRestaurantStatus } from "../repository/restaurant.repo";
 import { restaurantNotFoundError } from "../resraurant.errors";
-import { CreateRestaurantDTO, UpdateRestaurantDTO } from "../dto/restaurant.dto";
+import { CreateRestaurantDTO, UpdateRestaurantDTO } from "../dto/restaurant.request.dto";
 import { SystemRole } from "../../user/user.enums";
 import { notAuthorisedError } from "../../../lib/auth/errors";
 import { db } from "../../../lib/knex/knex";

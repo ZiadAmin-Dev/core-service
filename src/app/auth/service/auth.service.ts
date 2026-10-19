@@ -1,6 +1,6 @@
 import { SystemRole } from "../../user/user.enums";
 import { findUserExistsByEmailOrPhone, findUserByEmail, updateUserPassword, } from "../../user/repository/users.repo";
-import { LoginDTO, RegisterDTO, ForgetPasswordDTO, ResetPasswordDTO } from "../dto/auth.dto";
+import { LoginDTO, RegisterDTO, ForgetPasswordDTO, ResetPasswordDTO } from "../dto/auth.request.dto";
 import { cannotSingUpAsSystemAdminError, userAlreadyExistsError, incorrectCredentialsError, InvalidOTPError, restaurantDataIsRequiredError } from "../auth.errors";
 import { updatePasswordResetConsumedAt, createPasswordReset, findLatestPasswordResetByUserId } from "../repository/password-reset.repo";
 import { comparePassword, createAccessToken, createAuthTokens, generateOTP, hashOTP, hashPassword, verifyRefreshToken } from "../auth.utils";

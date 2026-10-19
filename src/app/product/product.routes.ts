@@ -4,6 +4,9 @@ import { ProductController } from "./controller/product.controller";
 import { rbac, requireRestaurantMember, requireBranchAccess } from "../../lib/auth/rbac";
 import {TOKENS} from "../../lib/di/tokens";
 import {container} from "../../lib/di/container";
+import { withCache } from "../../lib/cache/with.cache";
+import { toSec } from "../../pkg/utils/time";
+import { requireInternalApiKey } from "../../lib/auth/api-key";
 
 const productController = container.resolve<ProductController>(TOKENS.ProductController);
 
@@ -16,7 +19,8 @@ productRouter.get('/products/:id', productController.findById);
 productRouter.get('/restaurants/:restaurantId/products',
     authentication,
     requireRestaurantMember('restaurantId'),
-    rbac({resource:"core:product", action:'read'}),
+    rbac({ resource: "core:product", action: 'read' }),
+    withCache(toSec(1,'h')),
     productController.findByRestaurant
 );
 
@@ -33,3 +37,8 @@ productRouter.patch('/products/:id',
     rbac({resource:"core:product", action:'update'}),
     productController.update
 );
+
+// Internal (service-to-service)
+productRouter.get('/internal/branches/:id/products', requireInternalApiKey, productController.findByBranchAndIds);
+productRouter.post('/internal/branches/:id/reserve-stock', requireInternalApiKey, productController.reserveStock);
+    

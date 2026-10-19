@@ -8,10 +8,11 @@ const TTL = toSec(1, 'd'); // 1 day
 
 interface IdempotencyOptions {
     strict?: boolean; // If true, the same idempotency key must be used for the same request body
+    userScope?: boolean; // If true, the idempotency key is scoped to the user making the request
 }
 
 export function idempotency(options: IdempotencyOptions = {}) { 
-    const {strict = false} = options;
+    const {strict = false, userScope = false} = options;
     return async (req: Request, res: Response, next: NextFunction) => { 
         if(!['POST', 'PUT', 'PATCH'].includes(req.method)) {
             return next();
@@ -30,7 +31,16 @@ export function idempotency(options: IdempotencyOptions = {}) {
 
         try {
             const cacheProvider: ICacheProvider = container.resolve(TOKENS.CacheProvider);
-            const key = `idempotency:${req.method}:${req.originalUrl}:${idempotencyKey}`;
+            let key = `idempotency:${req.method}:${req.originalUrl}:${idempotencyKey}`;
+
+            if (userScope) {
+                if (!req.user?.userId) {
+                    return res.status(401).json({
+                        error: "User ID required for user-scoped idempotency",
+                    });
+                }
+                key = `${key}:userId:${req.user?.userId}`;
+            }
 
             const cached = await cacheProvider.get(key);
             if (cached) {

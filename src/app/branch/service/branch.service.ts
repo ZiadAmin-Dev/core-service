@@ -4,8 +4,9 @@ import { findRestaurantById } from "../../restaurant/repository/restaurant.repo"
 import { restaurantNotFoundError } from "../../restaurant/resraurant.errors";
 import { SystemRole } from "../../user/user.enums";
 import { branchNotFoundError } from "../branch.errors";
-import { CreateBranchDTO, UpdateBranchDTO, UpdateBranchStatusDTO } from "../dto/branch.dto";
+import { CreateBranchDTO, UpdateBranchDTO, UpdateBranchStatusDTO } from "../dto/branch.request.dto";
 import { createBranch, findActiveBranchesByRestaurantId, findBranchById, findBranchesByRestaurantId, findNearbyBranches, updateBranch, updateBranchStatus } from "../repository/branch.repo"
+import { BranchWithRestaurant } from "../entity/branch.types";
 
 @injectable()
 export class BranchService{
@@ -18,6 +19,13 @@ export class BranchService{
     findByRestaurant = (restaurantId: number) => findBranchesByRestaurantId(restaurantId);
 
     findActiveByRestaurant = (restaurantId: number) => findActiveBranchesByRestaurantId(restaurantId);
+
+    findByIdWithRestaurant = async (branchId: number): Promise<BranchWithRestaurant | null> => {
+        const branch = await findBranchById(branchId);
+        if (!branch) return null;
+        const restaurant = await findRestaurantById(branch.restaurantId);
+        return {branch, restaurantStatus: restaurant?.status ?? "unknown"};
+    }
 
     create = async (restaurantId: number, userId:number, userRole: SystemRole, data: CreateBranchDTO) =>{
         const restaurant = await findRestaurantById(restaurantId);

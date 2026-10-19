@@ -1,6 +1,5 @@
 import { container } from "tsyringe";
 import { TOKENS } from "./tokens";
-import { Logger } from "../logger/logger"
 
 
 // Services
@@ -31,8 +30,6 @@ import { BranchController } from "../../app/branch/controller/branch.controller"
 import { MemberController } from "../../app/rbac/controller/member.controller";
 import { ProductController } from "../../app/product/controller/product.controller";
 import { CustomerAddressController } from "../../app/customer-address/controller/customer-address.controller";
-import { cacheProvider } from "../cache/init";
-import { emailProvider } from "../email/init";
 
 container.registerSingleton<AuthController>(TOKENS.AuthController, AuthController);
 container.registerSingleton<UserController>(TOKENS.UserController, UserController);
@@ -42,14 +39,17 @@ container.registerSingleton<ProductController>(TOKENS.ProductController, Product
 container.registerSingleton<MemberController>(TOKENS.MemberController, MemberController);
 container.registerSingleton<CustomerAddressController>(TOKENS.CustomerAddressController, CustomerAddressController);
 
-// Infrastructure
+// libs
+import { Logger } from "../logger/logger"
 container.registerSingleton<Logger>(TOKENS.Logger, Logger);
 
-
-
-
 // pkg
+import { cacheProvider } from "../cache/init";
+import { emailProvider } from "../email/init";
+import { messageBroker } from "../events/init";
+
 container.registerInstance(TOKENS.CacheProvider, cacheProvider);
 container.registerInstance(TOKENS.EmailProvider, emailProvider);
+container.registerInstance(TOKENS.MessageBroker, messageBroker);
 
 export {container};
