@@ -7,11 +7,13 @@ import { comparePassword, createAccessToken, createAuthTokens, generateOTP, hash
 import { toUserResponse} from "../../../lib/utils/utils"
 import { toMs } from "../../../pkg/utils/time";
 import { RestaurantService } from "../../restaurant/service/restaurant.service";
+import { Restaurant } from "../../restaurant/entity/restaurant.entity";
 import { db } from "../../../lib/knex/knex";
 import { activateMemberByUserId, createRestaurantMember, findRestaurantMemberWithRole } from "../../rbac/repository/restaurant-member.repo";
 import { findBranchIdsByMemberId } from "../../rbac/repository/member-branch.repo";
 import { memberNotFoundError } from "../../rbac/rbac.errors";
 import { UserService } from "../../user/service/user.service";
+import { User } from "../../user/entity/user.entity";
 import { MemberService } from "../../rbac/service/member.service";
 import { inject, injectable } from "tsyringe";
 import { TOKENS } from "../../../lib/di/tokens";
@@ -35,22 +37,21 @@ export class AuthService {
         const existing = await findUserExistsByEmailOrPhone(data.email, data.phone);
         if (existing) throw userAlreadyExistsError;
 
-        const hashedPassword = await hashPassword(data.password);
-
-        let user: any; // Explicit type or User entity interface
-        let restaurant: any;
-        let restaurantMemberInfo: any = {};
+        let user: User | undefined;
+        let restaurant: Restaurant | undefined;
+        let restaurantMemberInfo: {restaurantId?: number, restaurantRole?: string, branchIds?: number[]} = {};
 
         // 2. Execute database operations within a managed transaction
         await db.transaction(async (trx) => {
             const now = new Date();
 
             // Create base user record
+            // NOTE: pass the raw password — UserService.create hashes it exactly once.
             user = await this.userService.create({
                 email: data.email,
                 phone: data.phone,
                 name: data.name,
-                password: hashedPassword,
+                password: data.password,
                 systemRole: data.role,
             }, trx);
 
@@ -161,7 +162,14 @@ export class AuthService {
     refresh = async(refreshToken: string) => {
         if (!refreshToken) throw incorrectCredentialsError;
         const payload = verifyRefreshToken(refreshToken)
-        const accessToken = createAccessToken({ userId: payload.userId, email: payload.email, role: payload.role });
+        const accessToken = createAccessToken({
+            userId: payload.userId,
+            email: payload.email,
+            role: payload.role,
+            restaurantId: payload.restaurantId,
+            restaurantRole: payload.restaurantRole,
+            branchIds: payload.branchIds,
+        });
         return { accessToken };
     }
 

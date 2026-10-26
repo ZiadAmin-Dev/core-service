@@ -52,7 +52,6 @@ export async function findUserByPhone(phone: string): Promise<User | undefined> 
         USER_COLUMNS
     ).where("phone", phone).whereNull("deleted_at").first();
 
-    console.log("findUserByPhone row:", row);
     return row? toEntity(row) : undefined;
 }
 
@@ -74,6 +73,10 @@ export async function findUserExistsByEmailOrPhone(email: string, phone: string)
         SELECT 1 FROM users WHERE email = ? OR phone = ?
         ) AS "exists"`, [email, phone]);
     return result.rows[0].exists;
+
+    //insted of using raw query we can use knex query builder like this
+    // const result = await db("users").where("email", email).orWhere("phone", phone).first();
+    // return !!result;
 }
 
 export async function findUserExistsByEmail(email: string): Promise<Boolean> {

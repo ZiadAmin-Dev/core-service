@@ -1,31 +1,26 @@
-import { getPermissionsByRoleName } from "../repository/permissions.repo";
-import { InMemoryCacheService } from "../../../lib/cache/cache.service";
-import { injectable } from "tsyringe";
+import {injectable} from "tsyringe";
+import {toMs} from "../../../pkg/utils/time";
+import {getPermissionsByRoleName} from "../repository/permissions.repo";
 
 @injectable()
 export class PermissionCacheService {
-
-    private cacheService = new InMemoryCacheService(1)
+    private cache:Map<string, {permissions:string[], cachedAt:number}> = new Map();
+    private readonly TTL = toMs(1,'h');
 
     async getPermissions(roleName: string): Promise<string[]> {
-        const cacheKey = `role_permissions:${roleName}`;
+        // check cache, if it is in the cache, return it, if not fetch from db
+        const cached = this.cache.get(roleName);
+        if(cached && Date.now() - cached.cachedAt < this.TTL) {
+            return cached.permissions
+        }
+        // after calling db, to insert it into the cache
+        const permissions = await getPermissionsByRoleName(roleName);
+        this.cache.set(roleName,{permissions, cachedAt: Date.now()});
 
-        return this.cacheService.getOrFetch(cacheKey, async () => {
-            return await getPermissionsByRoleName(roleName);
-        });
+        return permissions;
     }
 
-    hasPermission(userPermissions: string[], resource: string, action: string): boolean {
-        return userPermissions.includes(`${resource}:${action}`);
-    }
-
-    invalidateRolePermissions(roleName: string): void {
-        const cacheKey = `role_permissions:${roleName}`;
-        this.cacheService.invalidate(cacheKey);
-    }
-
-    clearCache(roleName?: string) {
-        if (roleName) this.cacheService.invalidate(roleName);
-        else this.cacheService.clearAll();
+    hasPermission(permissions: string[], resource: string, action: string): boolean {
+        return permissions.includes(`${resource}:${action}`);
     }
 }

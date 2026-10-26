@@ -55,7 +55,7 @@ export class MemberService {
         const branchIds = data.branchIds || [];
         await this.validateBranchOwnership(branchIds, restaurantId);
 
-        await db.transaction(async (trx) => { 
+        const memberPayload = await db.transaction(async (trx) => { 
             const now = new Date();
             const user = await this.userService.create({
                 email: data.email,
@@ -90,7 +90,7 @@ export class MemberService {
             await createPasswordReset({
                     userId: user.id,
                     otpHash: hashedOtp,
-                    expiresAt: new Date(Date.now() + toMs(1, 'h')),
+                    expiresAt: new Date(Date.now() + toMs(7, 'd')),
                     createdAt: new Date(),
                 }, trx
             )
@@ -112,6 +112,8 @@ export class MemberService {
                 }
             }
         });
+
+        return memberPayload;
     }
 
     async listMembers(restaurantId: number) {

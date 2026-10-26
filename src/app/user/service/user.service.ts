@@ -6,22 +6,15 @@ import { toUserResponse } from "../../../lib/utils/utils";
 import { SystemRole } from "../user.enums";
 import { Knex } from "knex";
 import {User} from "../entity/user.entity";
+import { CreateUserData } from "../types";
 import { userAlreadyExistsError } from "../../auth/auth.errors";
 import { hashPassword } from "../../auth/auth.utils";
 import { injectable } from "tsyringe";
 
-export interface CreateUserData {
-    email: string;
-    phone: string;
-    name: string;
-    password: string;
-    systemRole: SystemRole;
-}
-
 @injectable()
 export class UserService{
     
-    create = async (data: CreateUserData, trx?: Knex | Knex.Transaction) => {
+    create = async (data: CreateUserData, trx?: Knex | Knex.Transaction): Promise<User> => {
         const existing = await findUserExistsByEmailOrPhone(data.email, data.phone);
         if (existing) throw userAlreadyExistsError;
 

@@ -41,34 +41,51 @@ core-service/
 │   │   ├── branch/                 # Branches + geo search
 │   │   ├── product/                # Categories, products, branch stock
 │   │   ├── rbac/                   # Members, roles, permissions
+│   │   │   └── templates/          # member-invitation.ts
 │   │   └── health/                 # Liveness probe
 │   ├── lib/                        # Application-aware infrastructure & glue
-│   │   ├── auth/                   # guard, rbac, api-key middlewares
+│   │   ├── auth/                   # guard, rbac, api-key middlewares (guard.ts, rbac.ts,
+│   │   │                           #   api-key.ts, errors.ts)
 │   │   ├── cache/                  # Redis init + withCache middleware
+│   │   │                           #   (init.ts, with.cache.ts, cache.service.ts)
 │   │   ├── config/                 # Validated environment configuration
 │   │   ├── correlation/            # X-Correlation-ID tracing
 │   │   ├── di/                     # TSyringe container + tokens
-│   │   ├── email/                  # Mail provider wiring
+│   │   ├── email/                  # Mail provider wiring (init.ts)
 │   │   ├── error/                  # AppError, ValidationError, handler
 │   │   ├── events/                 # Outbox repo, drain, types, broker init
+│   │   │                           #   (event-types.ts, init.ts, outbox-drain.ts,
+│   │   │                           #    outbox.repo.ts, types.ts)
 │   │   ├── http/                   # Response envelopes + pagination
-│   │   │   └── pagination/       # cursor-pagination.ts (keyset helpers, decodeCursor,
+│   │   │   └── pagination/         # cursor-pagination.ts (keyset helpers, decodeCursor,
 │   │   │                         #   buildFilterParams), base-query.dto.ts (shared list-query
-│   │   │                         #   contract), *.test.ts (vitest pure-function tests)
+│   │   │                         #   contract)
 │   │   ├── idempotency/            # Redis/DB idempotency middleware
 │   │   ├── knex/                   # Knex connection manager + knexfile
 │   │   ├── logger/                 # Structured logger
 │   │   ├── types/                  # Ambient Express typings (req.user…)
-│   │   ├── utils/                  # toUserResponse + shared mappers,
+│   │   ├── utils/                  # toUserResponse + shared mappers (utils.ts),
 │   │   │                         # query-transforms.ts (CSV @Transforms),
 │   │   │                         # case.ts (camelToSnake)
 │   │   └── validation/             # validateBody/Params/Query + errors
 │   ├── pkg/                        # Pure, framework-agnostic providers
-│   │   ├── cache/                  # Redis provider + interface
-│   │   ├── email/                  # Mailjet client + interface
+│   │   ├── cache/                  # Redis provider + interface (cache.interface.ts, redis.ts)
+│   │   ├── email/                  # Mailjet client + interface (email.interface.ts, mailjet.ts)
 │   │   ├── messaging/              # RabbitMQ client abstraction
-│   │   └── utils/                  # Pure helpers (time, …)
+│   │   │                           #   (message-broker.interface.ts, rabbitmq.client.ts)
+│   │   └── utils/                  # Pure helpers (time.ts)
 │   └── migrations/                 # PostgreSQL migrations (users → outbox)
+│       ├── 20260802131643_create_users_table.ts
+│       ├── 20260802150955_create_password_resets_table.ts
+│       ├── 20260802153223_create_customer_addresses_table.ts
+│       ├── 20260813162440_create_restaurants_table.ts
+│       ├── 20260813162536_create_restaurant_branches_table.ts
+│       ├── 20260819110728_create_products_tables.ts
+│       ├── 20260822073536_create_rbac_tables.ts
+│       ├── 20260822082721_seed_rbac_data.ts
+│       ├── 20261011014324_seed_order_service_permissions.ts
+│       ├── 20261011014411_create_events_outbox.ts
+│       └── 20261011014521_add_delivery_fee_to_branches.ts
 ├── package.json
 └── tsconfig.json
 ```

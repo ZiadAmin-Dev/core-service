@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { ICacheProvider } from "../../pkg/cache/cache.interface";
 import { container } from "../di/container";
 import { TOKENS } from "../di/tokens";
+import { logger } from "../logger/logger";
 import { toSec } from "../../pkg/utils/time";
 
 export function withCache(ttl = toSec(1, 'h'), userScoped = false) {
@@ -34,7 +35,7 @@ export function withCache(ttl = toSec(1, 'h'), userScoped = false) {
                 if (res.statusCode >= 200 && res.statusCode < 300) {
                     const valueToCache = typeof body === 'string' ? body : JSON.stringify(body);
                     cacheProvider.set(key, valueToCache, ttl).catch(err => {
-                        console.error("Cache set error:", err);
+                        logger.error("Cache set error:", {error: (err as Error).message});
                     });
                 }
                 
@@ -43,7 +44,7 @@ export function withCache(ttl = toSec(1, 'h'), userScoped = false) {
                     const valueToCache = typeof body === 'string' ? body : JSON.stringify(body);
                     const NEGATIVE_TTL = toSec(5, 'm'); // Cache 404 for 5 minutes
                     cacheProvider.set(key, valueToCache, NEGATIVE_TTL).catch(err => {
-                        console.error("Cache set error for 404 response:", err);
+                        logger.error("Cache set error for 404 response:", {error: (err as Error).message});
                     });
                 }
                 return originalJson(body);
@@ -53,7 +54,7 @@ export function withCache(ttl = toSec(1, 'h'), userScoped = false) {
         }
         catch (err) {
             // ⚡ If any unexpected error occurs in the cache layer, proceed to the Controller anyway and do not block the request!
-            console.error("Cache Middleware unexpected error, skipping cache:", err);
+            logger.error("Cache Middleware unexpected error, skipping cache:", {error: (err as Error).message});
             next(); // Pass without err so it moves directly to the Controller!
         }
     }

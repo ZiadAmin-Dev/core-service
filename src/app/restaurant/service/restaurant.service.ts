@@ -8,6 +8,8 @@ import { CreateRestaurantDTO, UpdateRestaurantDTO } from "../dto/restaurant.requ
 import { SystemRole } from "../../user/user.enums";
 import { notAuthorisedError } from "../../../lib/auth/errors";
 import { db } from "../../../lib/knex/knex";
+import { insertOutboxEvent } from "../../../lib/events/outbox.repo";
+import { EVENT_TYPES } from "../../../lib/events/event-types";
 import { UserService } from "../../user/service/user.service";
 import { MemberService } from "../../rbac/service/member.service";
 import { injectable, inject } from "tsyringe";
@@ -119,6 +121,22 @@ export class RestaurantService {
         const restaurant = await findRestaurantById(id);
         if (!restaurant) throw restaurantNotFoundError;
 
-        return updateRestaurantStatus(id, status);
+        const trx = await db.transaction();
+        try {
+            const updated = await updateRestaurantStatus(id, status, trx);
+            if (status === RestaurantStatus.SUSPENDED) {
+                await insertOutboxEvent(trx, {
+                    aggregateType: "restaurants",
+                    aggregateId: id,
+                    eventType: EVENT_TYPES.RESTAURANT_SUSPENDED,
+                    payload: {restaurantId: id},
+                });
+            }
+            await trx.commit();
+            return updated;
+        } catch (err) {
+            await trx.rollback();
+            throw err;
+        }
     };
 }

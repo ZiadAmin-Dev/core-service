@@ -100,11 +100,12 @@ export class ProductService{
         const restaurant = await findRestaurantById(product.restaurantId);
         if (!restaurant) throw restaurantNotFoundError;
         
+        if (userRole !== SystemRole.SYSTEM_ADMIN && Number(restaurant.ownerId) !== Number(userId)) throw notAuthorisedError;
+        
         if (branchId) {
             const branch = await findBranchById(branchId);
             if (!branch || Number(branch.restaurantId) !== Number(product.restaurantId)) throw branchNotFoundError;
-        
-        if (userRole !== SystemRole.SYSTEM_ADMIN && Number(restaurant.ownerId) !== Number(userId)) throw notAuthorisedError;
+        }
         
         return await db.transaction(async (trx) => {
             let categoryId: number | undefined = undefined;
@@ -126,16 +127,33 @@ export class ProductService{
         
             let productBranchDetails;
             if (branchId && (data.price !== undefined || data.stock !== undefined || data.isAvailable !== undefined)) {
-                productBranchDetails = await updateProductBranchDetails(branchId, productId, {
+                const entity = await updateProductBranchDetails(branchId, productId, {
                     price: data.price,
                     stock: data.stock,
                     isAvailable: data.isAvailable,
                 }, trx);
+        
+                if (data.price !== undefined) {
+                    await insertOutboxEvent(trx, {
+                        aggregateType: "product_branch_details",
+                        aggregateId: `${branchId}:${productId}`,
+                        eventType: EVENT_TYPES.PRODUCT_PRICE_CHANGED,
+                        payload: {branchId, productId, newPrice: entity.price},
+                    });
+                }
+                if (data.stock !== undefined || data.isAvailable !== undefined) {
+                    await insertOutboxEvent(trx, {
+                        aggregateType: "product_branch_details",
+                        aggregateId: `${branchId}:${productId}`,
+                        eventType: EVENT_TYPES.PRODUCT_STOCK_CHANGED,
+                        payload: {branchId, productId, newStock: entity.stock, isAvailable: entity.isAvailable},
+                    });
+                }
+                productBranchDetails = entity;
             }
         
             return { product: updatedProduct, branchDetails: productBranchDetails };
         });
-        }
     }
 
     /**

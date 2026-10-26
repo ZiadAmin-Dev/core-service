@@ -127,8 +127,8 @@ export async function createBranch(data: Partial<Branch>, conn: Knex = db): Prom
 //                                  Update METHODS
 //========================================================================================
 
-export async function updateBranch(id: number, data: Partial<{label: string, addressText: string, lat: number, lng: number, opensAt: string, closesAt: string, deliveryRadius: number, currency: string, acceptOrders: boolean}>): Promise<Branch> {
-    const [row] = await db("restaurant_branches").where("id", id).update({
+export async function updateBranch(id: number, data: Partial<{label: string, addressText: string, lat: number, lng: number, opensAt: string, closesAt: string, deliveryRadius: number, currency: string, acceptOrders: boolean}>, conn: Knex = db): Promise<Branch> {
+    const [row] = await conn("restaurant_branches").where("id", id).update({
         ...(data.label !== undefined && {label: data.label}),
         ...(data.addressText !== undefined && {address_text: data.addressText}),
         ...(data.lat !== undefined && {lat: data.lat}),
@@ -144,8 +144,8 @@ export async function updateBranch(id: number, data: Partial<{label: string, add
     return toEntity(row);
 }
 
-export async function updateBranchStatus(id: number, data: Partial<{isActive: boolean, commission: number}>): Promise<Branch> {
-    const [row] = await db("restaurant_branches").where("id", id).update({
+export async function updateBranchStatus(id: number, data: Partial<{isActive: boolean, commission: number}>, conn: Knex = db): Promise<Branch> {
+    const [row] = await conn("restaurant_branches").where("id", id).update({
         ...(data.isActive !== undefined && {is_active: data.isActive}),
         ...(data.commission !== undefined && {commission: data.commission}),
         updated_at: new Date(),

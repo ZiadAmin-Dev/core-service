@@ -4,6 +4,9 @@ import { findRestaurantById } from "../../restaurant/repository/restaurant.repo"
 import { restaurantNotFoundError } from "../../restaurant/resraurant.errors";
 import { SystemRole } from "../../user/user.enums";
 import { branchNotFoundError } from "../branch.errors";
+import { db } from "../../../lib/knex/knex";
+import { insertOutboxEvent } from "../../../lib/events/outbox.repo";
+import { EVENT_TYPES } from "../../../lib/events/event-types";
 import { CreateBranchDTO, UpdateBranchDTO, UpdateBranchStatusDTO } from "../dto/branch.request.dto";
 import { createBranch, findActiveBranchesByRestaurantId, findBranchById, findBranchesByRestaurantId, findNearbyBranches, updateBranch, updateBranchStatus } from "../repository/branch.repo"
 import { BranchWithRestaurant } from "../entity/branch.types";
@@ -57,8 +60,21 @@ export class BranchService{
         const restaurant = await findRestaurantById(branch.restaurantId);
         if(!restaurant) throw restaurantNotFoundError;
         if(userRole != SystemRole.SYSTEM_ADMIN && (Number(restaurant.ownerId) !== Number(userId))) throw notAuthorisedError;
-        const updated = await updateBranch(id,data);
-        return updated;
+        const trx = await db.transaction();
+        try {
+            const updated = await updateBranch(id, data, trx);
+            await insertOutboxEvent(trx, {
+                aggregateType: "restaurant_branches",
+                aggregateId: id,
+                eventType: EVENT_TYPES.BRANCH_UPDATED,
+                payload: {branchId: id},
+            });
+            await trx.commit();
+            return updated;
+        } catch (err) {
+            await trx.rollback();
+            throw err;
+        }
     }
 
     updateStatus = async (id: number, userRole: SystemRole, data: UpdateBranchStatusDTO) => {
@@ -67,6 +83,23 @@ export class BranchService{
         const branch = await findBranchById(id);
         if (!branch) throw branchNotFoundError;
 
-        return updateBranchStatus(id, data);
+        const trx = await db.transaction();
+        try {
+            const updated = await updateBranchStatus(id, data, trx);
+            const eventType = data.isActive === false
+                ? EVENT_TYPES.BRANCH_DEACTIVATED
+                : EVENT_TYPES.BRANCH_UPDATED;
+            await insertOutboxEvent(trx, {
+                aggregateType: "restaurant_branches",
+                aggregateId: id,
+                eventType,
+                payload: {branchId: id},
+            });
+            await trx.commit();
+            return updated;
+        } catch (err) {
+            await trx.rollback();
+            throw err;
+        }
     };
 }

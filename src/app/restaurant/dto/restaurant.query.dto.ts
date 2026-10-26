@@ -9,6 +9,7 @@ import {
     IsOptional,
     IsPositive,
     IsString,
+    MaxLength,
     ValidateNested,
 } from "class-validator";
 import { buildFilterParams, FilterParams } from "../../../lib/http/pagination/cursor-pagination";
@@ -115,25 +116,32 @@ class StatusFilterDTO {
 class NameFilterDTO {
     @IsOptional()
     @IsString()
+    @MaxLength(255)
     eq?: string;
 
     @IsOptional()
     @IsString()
+    @MaxLength(255)
     like?: string;
 
     @IsOptional()
     @IsString()
+    @MaxLength(255)
     nlike?: string;
 
     @IsOptional()
     @Transform(splitCsv)
     @IsArray()
+    @ArrayMaxSize(100)
+    @ArrayMinSize(1)
     @IsString({ each: true })
     in?: string[];
 
     @IsOptional()
     @Transform(splitCsv)
     @IsArray()
+    @ArrayMaxSize(100)
+    @ArrayMinSize(1)
     @IsString({ each: true })
     nin?: string[];
 }

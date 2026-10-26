@@ -92,9 +92,9 @@ export async function updateRestaurant(id: number, data: {name?: string, logoUrl
     return toEntity(row);
 }
 
-export async function updateRestaurantStatus(id: number, status: RestaurantStatus): Promise<Restaurant> {
+export async function updateRestaurantStatus(id: number, status: RestaurantStatus, conn: Knex = db): Promise<Restaurant> {
     const now = new Date();
-    const [row] = await db("restaurants")
+    const [row] = await conn("restaurants")
         .where("id", id)
         .update({
             status: status,
