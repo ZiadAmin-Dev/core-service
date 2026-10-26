@@ -6,5 +6,6 @@ dist
 
 # local agent working files — not tracked
 AGENTS.md
-AGENT.md
-.agent/
+
+# opencode project-local skills — not tracked
+.opencode/
