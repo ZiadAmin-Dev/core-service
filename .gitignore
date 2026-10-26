@@ -3,3 +3,8 @@
 node_modules
 
 dist
+
+# local agent working files — not tracked
+AGENTS.md
+AGENT.md
+.agent/
