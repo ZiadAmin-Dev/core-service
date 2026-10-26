@@ -200,7 +200,7 @@ Only documented, registered routes are real — e.g. `RestaurantController.getAc
 
 - **API contracts:** [auth](docs/api%20contracts/auth.md) · [user](docs/api%20contracts/user.md) · [customer-address](docs/api%20contracts/customer-address.md) · [restaurant](docs/api%20contracts/restaurant.md) · [branch](docs/api%20contracts/branch.md) · [product](docs/api%20contracts/product.md) · [rbac](docs/api%20contracts/rbac.md) · [health](docs/api%20contracts/health.md)
 - **Business logic:** [auth](docs/business-logic/auth.md) · [user](docs/business-logic/user.md) · [customer-address](docs/business-logic/customer-address.md) · [restaurant](docs/business-logic/restaurant.md) · [branch](docs/business-logic/branch.md) · [product](docs/business-logic/product.md) · [rbac](docs/business-logic/rbac.md) · [health](docs/business-logic/health.md)
-- **System design:** [system-design](docs/system-design/system-design.md) · [event-driven-architecture](docs/system-design/event-driven-architecture.md) · [database-design](docs/system-design/database-design.md) · [folder-structure](docs/system-design/folder-structure.md)
+- **System design:** [system-design](docs/system-design/system-design.md) · [event-driven-architecture](docs/system-design/event-driven-architecture.md) · [startup-architecture](docs/system-design/startup-architecture.md) · [database-design](docs/system-design/database-design.md) · [folder-structure](docs/system-design/folder-structure.md)
 - **AI agent instructions:** agent rules (`AGENTS.md`), skills, and guidelines are local working files, git-ignored by design — they are not part of the hosted repo.
 
 ## 18. Known Limitations and Implementation Gaps

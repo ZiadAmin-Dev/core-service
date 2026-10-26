@@ -1,0 +1,230 @@
+direction: down
+
+title: "Quick Bite — core-service Startup Sequence" {
+  near: top-center
+}
+title.style.font-size: 46
+
+Core Service: {
+  style: {
+    fill: "#F8FAFC"
+    stroke: "#334155"
+    stroke-width: 3
+    border-radius: 16
+    font-size: 34
+  }
+
+  Startup Lifecycle: {
+    style: {
+      fill: "#EEF2FF"
+      stroke: "#6366F1"
+      stroke-width: 2
+      border-radius: 12
+      font-size: 30
+    }
+
+    server.ts: {
+      label: "server.ts\nentry point"
+      shape: page
+      style: {
+        fill: "#E0E7FF"
+        stroke: "#4338CA"
+        font-size: 30
+      }
+    }
+
+    DI: {
+      label: "DI Container\nresolve IMessageBroker"
+      shape: diamond
+      style: {
+        fill: "#E0E7FF"
+        stroke: "#4338CA"
+        font-size: 30
+      }
+    }
+
+    createApp: {
+      label: "createApp\nExpress Application"
+      shape: image
+      icon: icons/express.svg
+      width: 160
+      height: 160
+      style: {
+        fill: "#E0E7FF"
+        stroke: "#4338CA"
+        font-size: 30
+      }
+    }
+
+    http server: {
+      label: "HTTP Server\ncreateServer"
+      shape: image
+      icon: icons/nodejs.svg
+      width: 160
+      height: 160
+      style: {
+        fill: "#E0E7FF"
+        stroke: "#4338CA"
+        font-size: 30
+      }
+    }
+
+    WS Gateway: {
+      label: "WebSocket Gateway\nattachWsServer"
+      shape: image
+      icon: icons/websocket.svg
+      width: 160
+      height: 160
+      style: {
+        fill: "#E0E7FF"
+        stroke: "#4338CA"
+        font-size: 30
+      }
+    }
+
+    server.ts -> createApp: "createApp()" {
+      style: { font-size: 24 }
+    }
+    server.ts -> http server: "createServer(app)" {
+      style: { font-size: 24 }
+    }
+    http server -> WS Gateway: "attachWsServer(server)" {
+      style: { font-size: 24 }
+    }
+    server.ts -> DI: "resolve broker" {
+      style: { font-size: 24 }
+    }
+  }
+
+  HTTP API: {
+    label: "HTTP API\nlistens on env.PORT\nindependently"
+    shape: cylinder
+    style: {
+      fill: "#ECFDF5"
+      stroke: "#059669"
+      stroke-width: 2
+      font-size: 30
+    }
+  }
+
+  Core Events Consumer: {
+    label: "core-events consumer\nstartCoreEventsConsumer"
+    shape: image
+    icon: icons/typescript.svg
+    width: 160
+    height: 160
+    style: {
+      fill: "#E0E7FF"
+      stroke: "#4338CA"
+      font-size: 30
+    }
+  }
+
+  Postgres: {
+    label: "PostgreSQL"
+    shape: image
+    icon: icons/postgresql.svg
+    width: 160
+    height: 160
+    style: {
+      fill: "#FFF7ED"
+      stroke: "#EA580C"
+      stroke-width: 2
+      font-size: 30
+    }
+  }
+
+  Redis: {
+    label: "Redis\ncache + idempotency"
+    shape: image
+    icon: icons/redis.svg
+    width: 160
+    height: 160
+    style: {
+      fill: "#FFF7ED"
+      stroke: "#EA580C"
+      stroke-width: 2
+      font-size: 30
+    }
+  }
+}
+
+External Infrastructure: {
+  style: {
+    fill: "#FEFCE8"
+    stroke: "#CA8A04"
+    stroke-width: 2
+    border-radius: 12
+    font-size: 30
+  }
+
+  RabbitMQ: {
+    label: "RabbitMQ"
+    shape: image
+    icon: icons/rabbitmq.svg
+    width: 180
+    height: 180
+    style: {
+      fill: "#FEF9C3"
+      stroke: "#CA8A04"
+      stroke-width: 2
+      font-size: 30
+    }
+  }
+}
+
+Core Service.Startup Lifecycle.createApp -> Core Service.HTTP API: "HTTP boots FIRST" { style { font-size: 24 } }
+
+Core Service.Startup Lifecycle.DI -> External Infrastructure.RabbitMQ: "connect()" {
+  style: {
+    stroke: "#DC2626"
+    stroke-width: 2
+    stroke-dash: 4
+    animated: true
+    font-size: 24\n  }
+}
+
+DI failure note: {
+  label: "connect failure = warning only,\nnever blocks HTTP boot"
+  shape: text
+  style: {
+    font-size: 26
+    font-color: "#DC2626"
+  }
+}
+DI failure note.near: bottom-left
+DI failure note -> External Infrastructure.RabbitMQ: "" {
+  style: {
+    stroke: "#DC2626"
+    stroke-width: 2
+    stroke-dash: 4
+  }
+}
+
+Core Service.Startup Lifecycle.DI -> Core Service.Core Events Consumer: "startCoreEventsConsumer" {
+  style: { font-size: 24 }
+}
+Core Service.Core Events Consumer -> External Infrastructure.RabbitMQ: "consume core.events" {
+  style: {
+    font-size: 24
+    stroke: "#059669"
+    stroke-width: 2
+    stroke-dash: 4
+  }
+}
+
+Core Service.Startup Lifecycle.http server -> Core Service.Postgres: "shutdown closes pools" {
+  style: { font-size: 24 }
+}
+Core Service.Startup Lifecycle.createApp -> Core Service.Redis: "runtime" {
+  style: { font-size: 24 }
+}
+
+legend: {
+  label: "Legend:\n\nsolid = startup dependency\ndashed red = broker connect, failure caught as warning\ndashed green = runtime message flow"
+  shape: text
+  style: {
+    font-size: 30
+  }
+}
+legend.near: bottom-center
