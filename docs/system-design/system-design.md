@@ -65,7 +65,7 @@ flowchart TD
     API -->|OTP plus invites| MJ
 ```
 
-Only `product.stock.changed` is currently written to the outbox (`product.service.ts:195`); the remaining `EVENT_TYPES` values are defined but have no write call sites yet. See §4.
+`product.stock.changed` and `product.price.changed` are written per field-change in the product module (`product.service.ts:137/145/213`); `branch.updated` and `branch.deactivated` are written by the branch module (`branch.service.ts:66/92`); `restaurant.suspended` is written on suspension (`restaurant.service.ts:128`). Only `rbac.permissions_changed` remains a defined constant with no write call site yet — Undetermined until the RBAC module emits it. See §4 and `docs/system-design/event-driven-architecture.md` §1.2.
 
 ---
 
@@ -115,7 +115,7 @@ flowchart LR
 
 API instances never publish directly — rows are claimed by N parallel workers without duplicates, and failures stay pending with `attempts`/`last_error` for retry.
 
-Note: `EVENT_TYPES` also defines branch, restaurant, and RBAC event names, but `product.stock.changed` (written by `reserveStock`) is currently the only type with a write call site.
+Note: the only `EVENT_TYPES` constant without a write call site is `rbac.permissions_changed`; `product.price.changed`, `product.stock.changed`, `branch.updated`, `branch.deactivated` and `restaurant.suspended` are all emitted today.
 
 ---
 

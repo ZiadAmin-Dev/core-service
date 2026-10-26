@@ -15,9 +15,16 @@ stateDiagram-v2
     pending --> disabled: system_admin rejects
 ```
 
-- Only `system_admin` may change status (`updateStatus`, `restaurant.service.ts:117`); every transition stamps `status_updated_at`.
+- Only `system_admin` may change status (`updateStatus`, `restaurant.service.ts:119`); every transition stamps `status_updated_at`.
 - Status gates the storefront: `findNearbyBranches` only serves branches whose restaurant is `active`.
-- Note: the controller also defines `getActive`, but no route in `restaurant.routes.ts` registers it, so it is currently unreachable. The event type `restaurant.suspended` is defined in `EVENT_TYPES` but never written to the outbox by current code — only `product.stock.changed` is emitted (see `Docs/system-design/system-design.md` §4).
+- **Suspension publishes.** `updateStatus` writes a `restaurant.suspended` outbox row when the new
+  status is `SUSPENDED` — inside the same transaction as the status update
+  (`restaurant.service.ts:127-133`, payload `{restaurantId}`). Other transitions (`active`,
+  `disabled`, `pending`) emit no event by design — order-service only consumes suspensions.
+- Note: the controller also defines `getActive`, but no route in `restaurant.routes.ts` registers it, so it is currently unreachable.
+- Full emitted-event inventory across modules now covers `product.price.changed`,
+  `product.stock.changed`, `branch.updated`, `branch.deactivated` and `restaurant.suspended`; see
+  `Docs/system-design/event-driven-architecture.md` §1.2.
 
 ## 2. Endpoint Flows
 
@@ -31,6 +38,8 @@ flowchart TD
         CR[POST /api/restaurants/<br/>owner + profile] --> TRX[trx: create user<br/>create restaurant active<br/>create owner member]
         US[PATCH /api/restaurants/:id<br/>member + core:restaurant:update] --> UP[Update profile fields]
         ST[PATCH /api/restaurants/:id/status] --> SS[Update status]
+        SS -->|SUSPENDED| OB[Outbox: restaurant.suspended<br/>same trx]
+        SS -->|other transitions| NOE[No outbox event]
     end
 ```
 

@@ -32,11 +32,22 @@ flowchart TD
 ```mermaid
 flowchart TD
     CB[POST restaurant branch] --> OWN1{Owner or admin?}
-    OWN1 -->|yes| NEW[Create inactive branch]
+    OWN1 -->|yes| NEW[Create inactive branch<br/>no outbox event on create]
     UB[PATCH branch] --> OWN2{Owner or admin?}
-    OWN2 -->|yes| UPD[Update profile fields]
-    SB[PATCH branch status - admin] --> ST[Update active flag and commission]
+    OWN2 -->|yes| UPTRX[Transaction: update branch plus<br/>branch.updated outbox event]
+    SB[PATCH branch status - admin] --> STX[Transaction: update active flag and commission plus<br/>branch.deactivated if isActive false, else branch.updated]
 ```
+
+Outbox emissions (`docs/system-design/event-driven-architecture.md`, consumer: order-service):
+
+| Action | Event | Trigger | Payload |
+| --- | --- | --- | --- |
+| Update profile | `branch.updated` | **every** successful `update` (`branch.service.ts:66`) | `{branchId}` |
+| Update status | `branch.deactivated` | `isActive === false` (`branch.service.ts:89-91`) | `{branchId}` |
+| Update status | `branch.updated` | any status change with `isActive !== false` | `{branchId}` |
+
+Same-transaction guarantee as the product module: the event row commits with the domain write or
+neither commits. Branch **creation emits no event** (nothing to invalidate downstream yet).
 
 ### 2.3 Service-to-service (internal API key)
 
